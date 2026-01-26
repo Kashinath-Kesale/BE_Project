@@ -20,4 +20,28 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Response interceptor to handle 401s globally
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response) {
+      if (error.response.status === 401) {
+        // Clear session data
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+
+        // Redirect to login if not already there
+        if (window.location.pathname !== "/login") {
+          window.location.href = "/login";
+        }
+      } else if (error.response.status === 403) {
+        // Access Denied
+        console.warn("Access Denied: You do not have permission to view this page.");
+        window.location.href = "/login"; // Provide a way to switch accounts
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 export default api;

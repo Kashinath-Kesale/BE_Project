@@ -1,11 +1,11 @@
 import Job from "../models/Job.js";
 import Recruiter from "../models/Recruiter.js";
 
-// ✅ Create job (only approved recruiters)
+// ✅ Create job (approved or pending recruiters)
 export const createJob = async (req, res) => {
   try {
     const recruiter = await Recruiter.findOne({ userId: req.user._id });
-    if (!recruiter || recruiter.status !== "approved") {
+    if (!recruiter || (recruiter.status !== "approved" && recruiter.status !== "pending")) {
       return res.status(403).json({ message: "Recruiter not approved to post jobs" });
     }
 
@@ -32,6 +32,24 @@ export const createJob = async (req, res) => {
 export const listJobs = async (req, res) => {
   try {
     const jobs = await Job.find().sort({ createdAt: -1 });
+    res.json(jobs);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// ✅ List my jobs (protected)
+export const listMyJobs = async (req, res) => {
+  try {
+    console.log("listMyJobs called for user:", req.user._id);
+    const recruiter = await Recruiter.findOne({ userId: req.user._id });
+    console.log("Recruiter found:", recruiter);
+    if (!recruiter) {
+      return res.status(404).json({ message: "Recruiter profile not found" });
+    }
+
+    const jobs = await Job.find({ recruiterId: recruiter._id }).sort({ createdAt: -1 });
+    console.log("Jobs found:", jobs.length);
     res.json(jobs);
   } catch (error) {
     res.status(500).json({ message: error.message });

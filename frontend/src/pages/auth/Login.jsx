@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
 import api from "../../services/api.js";
@@ -41,6 +41,15 @@ const LockIcon = ({ className }) => (
 
 export default function Login() {
   const navigate = useNavigate();
+
+  // 🧹 Clean up any stale sessions on mount
+  useEffect(() => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    localStorage.removeItem("role");
+    localStorage.removeItem("name");
+  }, []);
+
   const [role, setRole] = useState("candidate");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -56,38 +65,36 @@ export default function Login() {
     try {
       const res = await api.post("/auth/login", { email, password, role });
 
-  const { token, role: userRole, verified, name } = res.data;
+      const { token, role: userRole, verified, name } = res.data;
 
-      // Backend already checks verification (returns 403 if not verified)
-      // This check is just an extra safety measure
       if (verified === false) {
         setError("Please verify your email before logging in.");
         setLoading(false);
         return;
       }
 
-  localStorage.setItem("token", token);
-  localStorage.setItem("role", userRole);
-  // Persist user's name so other pages (dashboard header) can show it immediately
-  if (name) localStorage.setItem("name", name);
+      localStorage.setItem("token", token);
+      localStorage.setItem("role", userRole);
+      if (name) localStorage.setItem("name", name);
 
-      // Navigate based on role
       if (userRole === "recruiter") {
-        navigate("/recruiter/dashboard");
-      } else if (userRole === "candidate") {
-        navigate("/candidate/dashboard");
-      } else {
-        navigate("/");
+        navigate("/recruiter/dashboard", { replace: true });
+        return;
       }
+
+      if (userRole === "candidate") {
+        navigate("/candidate/dashboard", { replace: true });
+        return;
+      }
+
+      navigate("/", { replace: true });
     } catch (err) {
-      // Handle specific error cases
       if (err?.response?.status === 403) {
-        // User not verified - backend returns this specific error
-        setError(err?.response?.data?.message || "Please verify your email before logging in.");
+        setError(err?.response?.data?.message || "Please verify your email.");
       } else if (err?.response?.status === 401) {
-        setError("Invalid email or password. Please try again.");
+        setError("Invalid email or password.");
       } else {
-        setError(err?.response?.data?.message || "Login failed. Try again.");
+        setError("Login failed.");
       }
     } finally {
       setLoading(false);
@@ -128,11 +135,10 @@ export default function Login() {
               <button
                 type="button"
                 onClick={() => setRole("candidate")}
-                className={`flex items-center justify-center gap-3 p-4 rounded-xl border-2 transition-all duration-300 ${
-                  role === "candidate"
-                    ? "border-indigo-500 bg-indigo-50"
-                    : "border-gray-200 bg-white hover:border-gray-300"
-                }`}
+                className={`flex items-center justify-center gap-3 p-4 rounded-xl border-2 transition-all duration-300 ${role === "candidate"
+                  ? "border-indigo-500 bg-indigo-50"
+                  : "border-gray-200 bg-white hover:border-gray-300"
+                  }`}
               >
                 <UserIcon />
                 <span className="font-semibold text-gray-800">Candidate</span>
@@ -140,11 +146,10 @@ export default function Login() {
               <button
                 type="button"
                 onClick={() => setRole("recruiter")}
-                className={`flex items-center justify-center gap-3 p-4 rounded-xl border-2 transition-all duration-300 ${
-                  role === "recruiter"
-                    ? "border-indigo-500 bg-indigo-50"
-                    : "border-gray-200 bg-white hover:border-gray-300"
-                }`}
+                className={`flex items-center justify-center gap-3 p-4 rounded-xl border-2 transition-all duration-300 ${role === "recruiter"
+                  ? "border-indigo-500 bg-indigo-50"
+                  : "border-gray-200 bg-white hover:border-gray-300"
+                  }`}
               >
                 <BriefcaseIcon />
                 <span className="font-semibold text-gray-800">Recruiter</span>

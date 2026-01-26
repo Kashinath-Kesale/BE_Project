@@ -26,7 +26,11 @@ const DashboardLayout = () => {
 
       {/* Main content */}
       <div className={`flex-1 transition-[margin] duration-300 ${isSidebarOpen ? "md:ml-56" : "md:ml-20"}`}>
-        <Navbar toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
+        <Navbar
+          toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+          role="candidate"
+        />
+
         <main className="p-6 pt-20 min-h-screen">
           <Outlet />
         </main>

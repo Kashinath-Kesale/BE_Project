@@ -6,7 +6,7 @@ import { sendEmail } from "../utils/email.js";
 
 // 🟢 REGISTER USER
 export const registerUser = async (req, res) => {
-    console.log("🟢 registerUser called with:", req.body);
+  console.log("🟢 registerUser called with:", req.body);
   try {
     console.log("🟡 Incoming registration request:", req.body);
 
@@ -33,55 +33,59 @@ export const registerUser = async (req, res) => {
     const expires = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
     console.log("🟢 Creating new user document...");
+    const isVerified = process.env.SKIP_EMAIL === 'true';
     const user = await User.create({
       name,
       email,
       password: hashedPassword,
       role,
-      isVerified: false,
-      verificationTokenHash: tokenHash,
-      verificationExpires: expires,
+      isVerified,
+      verificationTokenHash: isVerified ? undefined : tokenHash,
+      verificationExpires: isVerified ? undefined : expires,
     });
 
     console.log("✅ User created successfully:", user.email);
 
-    const verifyUrl = `${process.env.FRONTEND_URL || "http://localhost:5173"}/verify?token=${rawToken}`;
-    console.log("✅ Verification link:", verifyUrl);
+    let verificationLink = null;
+    if (!isVerified) {
+      verificationLink = `${process.env.FRONTEND_URL || "http://localhost:5173"}/verify?token=${rawToken}`;
+      console.log("✅ Verification link:", verificationLink);
 
-    const html = `
-      <p>Hi ${name},</p>
-      <p>Please verify your email to activate your account:</p>
-      <p><a href="${verifyUrl}" style="padding: 10px 15px; background-color: #4f46e5; color: white; text-decoration: none; border-radius: 5px;">Verify Email</a></p>
-      <p>This link expires in 24 hours.</p>
-    `;
+      const html = `
+        <p>Hi ${name},</p>
+        <p>Please verify your email to activate your account:</p>
+        <p><a href="${verificationLink}" style="padding: 10px 15px; background-color: #4f46e5; color: white; text-decoration: none; border-radius: 5px;">Verify Email</a></p>
+        <p>This link expires in 24 hours.</p>
+      `;
 
-    console.log("📨 Sending verification email to:", email);
-    let emailSent = false;
-    
-    try {
-      await sendEmail({ to: email, subject: "Verify your email", html });
-      emailSent = true;
-      console.log("✅ Verification email sent successfully!");
-    } catch (emailError) {
-      console.error("❌ Failed to send verification email:", emailError?.message || emailError);
-      
-      // If email fails, we still save the user but return an error message
-      // The user can request a new verification email later
-      return res.status(500).json({ 
-        message: "Registration successful, but verification email could not be sent. Please try resending verification email or contact support.",
-        error: emailError?.message,
-        // Include verification link in response for development/debugging (remove in production if needed)
-        verificationLink: verifyUrl
-      });
+      console.log("📨 Sending verification email to:", email);
+      let emailSent = false;
+
+      try {
+        await sendEmail({ to: email, subject: "Verify your email", html });
+        emailSent = true;
+        console.log("✅ Verification email sent successfully!");
+      } catch (emailError) {
+        console.error("❌ Failed to send verification email:", emailError?.message || emailError);
+
+        // If email fails, we still save the user but return an error message
+        // The user can request a new verification email later
+        return res.status(500).json({
+          message: "Registration successful, but verification email could not be sent. Please try resending verification email or contact support.",
+          error: emailError?.message,
+          // Include verification link in response for development/debugging (remove in production if needed)
+          verificationLink
+        });
+      }
     }
 
-    const message = "Registered successfully. Please check your email to verify your account.";
+    const message = isVerified ? "Registered successfully." : "Registered successfully. Please check your email to verify your account.";
 
-    return res.status(201).json({ message });
+    return res.status(201).json({ message, requiresVerification: !isVerified, verificationLink });
   } catch (error) {
     console.error("❌ Registration Error:", error?.message || error);
     console.error("❌ Full error stack:", error.stack);
-    
+
     // Provide more specific error messages
     if (error.name === 'ValidationError') {
       return res.status(400).json({ message: error.message || "Validation error" });
@@ -92,7 +96,7 @@ export const registerUser = async (req, res) => {
     if (error.name === 'MongoServerError') {
       return res.status(500).json({ message: "Database error. Please try again." });
     }
-    
+
     return res.status(500).json({ message: error.message || "Registration failed. Please try again." });
   }
 };
@@ -101,7 +105,7 @@ export const registerUser = async (req, res) => {
 // 🟡 LOGIN USER
 export const loginUser = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, role } = req.body; // Expect role from frontend
     const user = await User.findOne({ email });
 
     if (!user)
@@ -110,6 +114,15 @@ export const loginUser = async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch)
       return res.status(401).json({ message: "Invalid credentials" });
+
+    // 🔒 Enforce Role Check
+    if (role && user.role !== role) {
+      const correctPortal =
+        user.role === "recruiter" ? "Recruiter" : "Candidate";
+      return res.status(403).json({
+        message: `You are registered as a ${user.role}. Please login from the ${correctPortal} tab.`,
+      });
+    }
 
     if (!user.isVerified)
       return res
@@ -189,17 +202,27 @@ export const resendVerification = async (req, res) => {
       <p><a href="${verifyUrl}" style="padding: 10px 15px; background-color: #4f46e5; color: white; text-decoration: none; border-radius: 5px;">Verify Email</a></p>
     `;
 
-    console.log("🔁 Sending verification email to:", email);
-    try {
-      await sendEmail({ to: email, subject: "Verify your email", html });
-      console.log("✅ Verification email resent successfully!");
-      return res.json({ message: "Verification email resent successfully. Please check your email." });
-    } catch (emailError) {
-      console.error("❌ Failed to resend verification email:", emailError?.message || emailError);
-      return res.status(500).json({ 
-        message: "Failed to resend verification email. Please check your email configuration or try again later.",
-        error: emailError?.message 
-      });
+    // 4. Send email (or skip if dev mode)
+    if (process.env.SKIP_EMAIL === "true") {
+      console.log("---------------------------------------------------");
+      console.log("🔕 SKIP_EMAIL=true. Verification Link:");
+      console.log(verifyUrl);
+      console.log("---------------------------------------------------");
+      console.log("✅ Verification email resent successfully (skipped sending)!");
+      return res.json({ message: "Verification email resent successfully (skipped sending). Please check console for link." });
+    } else {
+      console.log("🔁 Sending verification email to:", email);
+      try {
+        await sendEmail({ to: email, subject: "Verify your email", html });
+        console.log("✅ Verification email resent successfully!");
+        return res.json({ message: "Verification email resent successfully. Please check your email." });
+      } catch (emailError) {
+        console.error("❌ Failed to resend verification email:", emailError?.message || emailError);
+        return res.status(500).json({
+          message: "Failed to resend verification email. Please check your email configuration or try again later.",
+          error: emailError?.message
+        });
+      }
     }
   } catch (error) {
     console.error("❌ Resend Error:", error);
@@ -264,7 +287,7 @@ export const forgotPassword = async (req, res) => {
     }
 
     const user = await User.findOne({ email });
-    
+
     // Don't reveal if user exists or not (security best practice)
     if (!user) {
       return res.json({ message: "If that email exists, a password reset link has been sent." });
@@ -296,9 +319,9 @@ export const forgotPassword = async (req, res) => {
       return res.json({ message: "If that email exists, a password reset link has been sent." });
     } catch (emailError) {
       console.error("❌ Failed to send password reset email:", emailError?.message || emailError);
-      return res.status(500).json({ 
+      return res.status(500).json({
         message: "Failed to send password reset email. Please try again later.",
-        error: emailError?.message 
+        error: emailError?.message
       });
     }
   } catch (error) {

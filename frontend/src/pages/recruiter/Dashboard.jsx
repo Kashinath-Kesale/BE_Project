@@ -1,10 +1,18 @@
-import React from 'react';
-import { Briefcase, Users, FileText, CheckCircle, Clock } from 'lucide-react';
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import api from "../../services/api";
+import {
+  Briefcase,
+  Users,
+  FileText,
+  CheckCircle,
+  AlertCircle
+} from "lucide-react";
 
 // --- Reusable Components ---
 
 const StatCard = ({ icon, title, value, color }) => (
-  <div className="bg-white p-6 rounded-2xl shadow-md flex items-center gap-5 transition-transform transform hover:-translate-y-1">
+  <div className="bg-white p-6 rounded-2xl shadow-md flex items-center gap-5 transition-transform hover:-translate-y-1">
     <div className={`w-14 h-14 rounded-full flex items-center justify-center ${color}`}>
       {icon}
     </div>
@@ -17,20 +25,27 @@ const StatCard = ({ icon, title, value, color }) => (
 
 const ApplicantRow = ({ name, jobTitle, status }) => {
   const statusStyles = {
-    shortlisted: 'bg-blue-100 text-blue-700',
-    applied: 'bg-yellow-100 text-yellow-700',
+    shortlisted: "bg-blue-100 text-blue-700",
+    applied: "bg-yellow-100 text-yellow-700",
   };
 
   return (
-    <div className="flex items-center justify-between p-4 bg-white rounded-xl mb-3 shadow-sm hover:shadow-md transition-shadow">
+    <div className="flex items-center justify-between p-4 bg-white rounded-xl mb-3 shadow-sm hover:shadow-md">
       <div className="flex items-center gap-4">
-        <img src={`https://i.pravatar.cc/40?u=${name}`} alt={name} className="w-10 h-10 rounded-full" />
+        <img
+          src={`https://i.pravatar.cc/40?u=${name}`}
+          alt={name}
+          className="w-10 h-10 rounded-full"
+        />
         <div>
           <p className="font-semibold text-gray-900">{name}</p>
           <p className="text-sm text-gray-500">{jobTitle}</p>
         </div>
       </div>
-      <span className={`px-3 py-1 text-xs font-semibold rounded-full ${statusStyles[status] || 'bg-gray-100 text-gray-700'}`}>
+      <span
+        className={`px-3 py-1 text-xs font-semibold rounded-full ${statusStyles[status] || "bg-gray-100 text-gray-700"
+          }`}
+      >
         {status.charAt(0).toUpperCase() + status.slice(1)}
       </span>
     </div>
@@ -40,32 +55,115 @@ const ApplicantRow = ({ name, jobTitle, status }) => {
 // --- Main Dashboard Component ---
 
 export default function Dashboard() {
-  // Dummy data - in a real app, this would come from API calls.
-  const stats = {
-    activeJobs: 12,
-    totalApplicants: 256,
-    shortlisted: 48,
-    hired: 8,
-  };
+  const navigate = useNavigate();
+  const [recruiter, setRecruiter] = useState(null);
+  const [stats, setStats] = useState({ activeJobs: 0, totalApplicants: 0, shortlisted: 0, hired: 0 });
+  const [recentApplicants, setRecentApplicants] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [needsProfile, setNeedsProfile] = useState(false);
 
-  const recentApplicants = [
-    { name: 'Alice Johnson', jobTitle: 'Senior Frontend Developer', status: 'shortlisted' },
-    { name: 'Bob Williams', jobTitle: 'UX/UI Designer', status: 'applied' },
-    { name: 'Charlie Brown', jobTitle: 'Product Manager', status: 'applied' },
-    { name: 'Diana Miller', jobTitle: 'Senior Frontend Developer', status: 'shortlisted' },
-  ];
+  // Fetch recruiter profile, stats, and recent applications
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        let profileRes;
+        try {
+          // We allow this to fail with 404 (handled below), but 401 will bubble up to interceptor
+          profileRes = await api.get("/recruiters/profile");
+        } catch (err) {
+          if (err.response && err.response.status === 404) {
+            setNeedsProfile(true);
+            setLoading(false);
+            return;
+          }
+          throw err; // Re-throw 401s and other errors
+        }
 
-  const activeJobs = [
-      {title: "Senior Frontend Developer", applicants: 25},
-      {title: "Product Manager", applicants: 15},
-      {title: "Data Scientist", applicants: 40}
-  ]
+        if (!profileRes || !profileRes.data) {
+          setNeedsProfile(true);
+          setLoading(false);
+          return;
+        }
+
+        setRecruiter(profileRes.data);
+
+        // Fetch stats only if profile exists. 
+        // We let these fail naturally OR handle them. 
+        // If 401 happens here, interceptor catches it.
+        const [statsRes, recentRes] = await Promise.all([
+          api.get("/recruiters/stats"), // Removed .catch() to allow 401 propagation
+          api.get("/recruiters/recent-applications") // Removed .catch() to allow 401 propagation
+        ]);
+
+        if (statsRes) setStats(statsRes.data);
+        if (recentRes) setRecentApplicants(recentRes.data);
+
+      } catch (error) {
+        // 401s are handled by interceptor (redirects).
+        // For other errors, we just log them.
+        console.error("Dashboard load failed", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  if (loading) return <div className="p-6">Loading...</div>;
+
+  if (needsProfile) {
+    return (
+      <div className="p-6">
+        <h1 className="text-3xl font-bold text-gray-800 mb-6">Recruiter Dashboard</h1>
+
+        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-8 rounded-r-xl shadow-sm max-w-2xl">
+          <div className="flex items-start gap-4">
+            <AlertCircle className="text-yellow-500 mt-1" size={32} />
+            <div>
+              <h3 className="text-xl font-bold text-yellow-800 mb-2">Profile Pending</h3>
+              <p className="text-yellow-700 mb-6">
+                Welcome to Resume Analyzer! To start posting jobs and managing applicants, you need to complete your recruiter profile first.
+              </p>
+              <button
+                onClick={() => navigate("/recruiter/profile")}
+                className="px-6 py-2 bg-yellow-600 text-white font-semibold rounded-lg hover:bg-yellow-700 transition shadow-md"
+              >
+                Create Profile
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-1">
-      <h1 className="text-3xl font-bold text-gray-800 mb-6">Recruiter Dashboard</h1>
+      <h1 className="text-3xl font-bold text-gray-800 mb-4">
+        Recruiter Dashboard
+      </h1>
 
-      {/* Stats Grid */}
+      {/* Status Banner */}
+      {recruiter?.status === "pending" && (
+        <div className="mb-6 p-4 bg-yellow-100 text-yellow-800 rounded-xl">
+          Your recruiter profile is under admin review.
+        </div>
+      )}
+
+      {recruiter?.status === "approved" && (
+        <div className="mb-6 p-4 bg-green-100 text-green-800 rounded-xl">
+          Your recruiter profile is approved. You can post jobs now.
+        </div>
+      )}
+
+      {recruiter?.status === "rejected" && (
+        <div className="mb-6 p-4 bg-red-100 text-red-800 rounded-xl">
+          Your recruiter profile was rejected by admin.
+        </div>
+      )}
+
+      {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <StatCard
           icon={<Briefcase size={28} className="text-white" />}
@@ -87,37 +185,28 @@ export default function Dashboard() {
         />
         <StatCard
           icon={<CheckCircle size={28} className="text-white" />}
-          title="Hired This Month"
+          title="Hired"
           value={stats.hired}
           color="bg-emerald-500"
         />
       </div>
 
-      {/* Recent Activity & Jobs */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2">
-          <h2 className="text-xl font-bold text-gray-700 mb-4">Recent Applicants</h2>
+      {/* Recent Applicants */}
+      <div>
+        <h2 className="text-xl font-bold text-gray-700 mb-4">
+          Recent Applicants
+        </h2>
+        {recentApplicants.length === 0 ? (
+          <div className="bg-white p-8 rounded-2xl shadow-md text-center text-gray-500">
+            No applicants yet. Post a job to get started!
+          </div>
+        ) : (
           <div className="bg-white p-4 rounded-2xl shadow-md">
-            {recentApplicants.map((applicant, index) => (
-              <ApplicantRow key={index} {...applicant} />
+            {recentApplicants.map((a, i) => (
+              <ApplicantRow key={i} {...a} />
             ))}
           </div>
-        </div>
-
-        <div>
-          <h2 className="text-xl font-bold text-gray-700 mb-4">Top Jobs</h2>
-          <div className="bg-white p-6 rounded-2xl shadow-md space-y-4">
-              {activeJobs.map((job, index) => (
-                  <div key={index} className="flex justify-between items-center pb-3 border-b last:border-b-0">
-                      <div>
-                        <p className="font-semibold text-gray-800">{job.title}</p>
-                        <p className="text-sm text-gray-500">{job.applicants} Applicants</p>
-                      </div>
-                      <a href="#" className="text-indigo-600 font-semibold text-sm hover:underline">View</a>
-                  </div>
-              ))}
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );

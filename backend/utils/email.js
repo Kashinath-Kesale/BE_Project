@@ -33,6 +33,12 @@ export const sendEmail = async ({ to, subject, html }) => {
       subject,
       html,
     });
+
+    // Check if Resend returned an error
+    if (info.error) {
+      throw new Error(`Resend Error: ${info.error.message}`);
+    }
+
     console.log('✅ Email sent successfully via Resend:', info);
     return info;
   } catch (error) {

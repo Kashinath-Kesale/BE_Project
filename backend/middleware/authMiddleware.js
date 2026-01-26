@@ -8,6 +8,11 @@ export const protect = async (req, res, next) => {
       token = req.headers.authorization.split(" ")[1];
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       req.user = await User.findById(decoded.id).select("-password");
+
+      if (!req.user) {
+        return res.status(401).json({ message: "Not authorized, user not found" });
+      }
+
       next();
     } catch (error) {
       return res.status(401).json({ message: "Not authorized, token failed" });
@@ -23,5 +28,27 @@ export const adminOnly = (req, res, next) => {
     next();
   } else {
     res.status(403).json({ message: "Admin access only" });
+  }
+};
+
+export const recruiterOnly = (req, res, next) => {
+  if (req.user && (req.user.role === "recruiter" || req.user.role === "admin")) {
+    next();
+  } else {
+    console.log("🔴 Access Denied in recruiterOnly middleware");
+    console.log("User found:", req.user ? req.user._id : "No user");
+    console.log("User role:", req.user ? req.user.role : "N/A");
+    res.status(403).json({ message: "Recruiter access only" });
+  }
+};
+
+export const candidateOnly = (req, res, next) => {
+  if (req.user && (req.user.role === "candidate" || req.user.role === "admin")) {
+    next();
+  } else {
+    console.log("🔴 Access Denied in candidateOnly middleware");
+    console.log("User found:", req.user ? req.user._id : "No user");
+    console.log("User role:", req.user ? req.user.role : "N/A");
+    res.status(403).json({ message: "Candidate access only" });
   }
 };

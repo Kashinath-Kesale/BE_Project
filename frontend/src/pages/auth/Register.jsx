@@ -62,8 +62,12 @@ export default function Register() {
       console.log("🟢 Attempting registration with:", { name, email, role });
       const response = await api.post("/auth/register", { name, email, password, role });
       console.log("✅ Registration successful:", response.data);
-      // It correctly navigates to your "check-email" route.
-      navigate("/check-email");
+      // Navigate based on whether verification is required
+      if (response.data.requiresVerification) {
+        navigate("/check-email");
+      } else {
+        navigate("/login");
+      }
     } catch (err) {
       console.error("❌ Registration error:", err);
       const errorMessage = err?.response?.data?.message || 

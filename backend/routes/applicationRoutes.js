@@ -3,6 +3,7 @@ import {
   applyToJob,
   getMyApplications,
   getRecruiterApplications,
+  getJobApplications,
   updateApplicationStatus,
   withdrawApplication,
 } from "../controllers/applicationController.js";
@@ -17,6 +18,7 @@ router.delete("/:id", protect, withdrawApplication);
 
 // Recruiter
 router.get("/recruiter", protect, getRecruiterApplications);
+router.get("/job/:jobId", protect, getJobApplications);
 router.put("/:id/status", protect, updateApplicationStatus);
 
 export default router;

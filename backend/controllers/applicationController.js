@@ -58,6 +58,37 @@ export const getRecruiterApplications = async (req, res) => {
   }
 };
 
+// ✅ Recruiter views applications for a specific job
+export const getJobApplications = async (req, res) => {
+  try {
+    const { jobId } = req.params;
+
+    // Verify job belongs to recruiter
+    const job = await Job.findOne({ _id: jobId });
+    if (!job) {
+      return res.status(404).json({ message: "Job not found" });
+    }
+
+    // Check if current user is the owner of the job
+    // (We need to find the recruiter profile first)
+    const recruiter = await Recruiter.findOne({ userId: req.user._id });
+    if (!recruiter || job.recruiterId.toString() !== recruiter._id.toString()) {
+      return res.status(403).json({ message: "Not authorized to view these applications" });
+    }
+
+    const applications = await Application.find({ jobId })
+      .populate("candidateId", "name email")
+      .sort({ createdAt: -1 });
+
+    // Format response to match frontend expectation
+    // Frontend expects { applications: [...] } or just [...]?
+    // Looking at Applicants.jsx: res.data.applications
+    res.json({ applications });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 // ✅ Recruiter updates application status (shortlist/reject/hire)
 export const updateApplicationStatus = async (req, res) => {
   try {

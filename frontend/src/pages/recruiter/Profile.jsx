@@ -1,138 +1,247 @@
-import React, { useState, useEffect } from 'react';
-import { User, Building, Globe, Phone, MapPin } from 'lucide-react';
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import api from "../../services/api";
+import { Building, MapPin, FileText, Edit2, Save, X, Lock as LockIcon } from "lucide-react";
 
-// --- Reusable Components ---
+// --- Reusable Input Components ---
 
 const ProfileInput = ({ icon, label, ...props }) => (
   <div>
-    <label className="block text-sm font-semibold text-gray-700 mb-2">{label}</label>
+    <label className="block text-sm font-semibold text-gray-700 mb-2">
+      {label}
+    </label>
     <div className="relative">
       <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
         {icon}
       </div>
       <input
         {...props}
-        className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
+        className={`w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-300 rounded-lg
+        focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-60 disabled:cursor-not-allowed ${props.className}`}
       />
     </div>
   </div>
 );
 
+const ProfileTextarea = ({ icon, label, ...props }) => (
+  <div>
+    <label className="block text-sm font-semibold text-gray-700 mb-2">
+      {label}
+    </label>
+    <div className="relative">
+      <div className="absolute top-3 left-0 pl-4 pointer-events-none">
+        {icon}
+      </div>
+      <textarea
+        {...props}
+        rows={4}
+        className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-300 rounded-lg
+        focus:outline-none focus:ring-2 focus:ring-indigo-500"
+      />
+    </div>
+  </div>
+);
+
+// --- View Mode Component (Card) ---
+
+const ProfileCard = ({ profile, status, onEdit }) => (
+  <div className="max-w-3xl bg-white rounded-2xl shadow-md overflow-hidden animate-in fade-in duration-300">
+    <div className="bg-gradient-to-r from-indigo-600 to-indigo-800 p-8 text-white">
+      <div className="flex justify-between items-start">
+        <div>
+          <div className="flex items-center gap-3 mb-2">
+            <div className="p-2 bg-white/20 rounded-lg">
+              <Building size={24} className="text-white" />
+            </div>
+            <h2 className="text-3xl font-bold text-white">{profile.companyName}</h2>
+          </div>
+          {profile.location && (
+            <div className="flex items-center gap-2 text-white/90 mt-1">
+              <MapPin size={16} />
+              <span className="font-medium">{profile.location}</span>
+            </div>
+          )}
+        </div>
+        <div className="flex flex-col items-end gap-3">
+          <span className={`px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider ${status === 'approved' ? 'bg-green-100 text-green-800' :
+            status === 'rejected' ? 'bg-red-100 text-red-800' :
+              'bg-yellow-100 text-yellow-800'
+            }`}>
+            {status}
+          </span>
+          <button
+            onClick={onEdit}
+            className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-sm font-medium transition backdrop-blur-sm"
+          >
+            <Edit2 size={16} /> Edit Profile
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div className="p-8">
+      <div className="mb-6">
+        <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">About Company</h3>
+        <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+          {profile.description || "No description provided."}
+        </p>
+      </div>
+
+      {/* Fallback if location isn't in header */}
+      {!profile.location && (
+        <p className="text-gray-400 text-sm italic">Location not specified.</p>
+      )}
+    </div>
+  </div>
+);
+
+
 // --- Main Profile Component ---
 
 export default function Profile() {
+  const navigate = useNavigate();
   const [profile, setProfile] = useState({
-    companyName: '',
-    website: '',
-    address: '',
-    phone: '',
+    companyName: "",
+    location: "",
+    description: "",
   });
+
+  const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
 
-  // Fetch recruiter profile on component mount
+  // Fetch recruiter profile
+  const fetchProfile = async () => {
+    try {
+      const res = await api.get("/recruiters/profile");
+      if (res.data) {
+        setProfile({
+          companyName: res.data.companyName || "",
+          location: res.data.location || "",
+          description: res.data.description || "",
+        });
+        setStatus(res.data.status);
+        setIsEditing(false); // Default to view mode if profile exists
+      }
+    } catch (error) {
+      if (error.response && error.response.status === 404) {
+        // No profile yet, allow creating one
+        setStatus("new");
+        setIsEditing(true); // Default to edit mode for new users
+      } else {
+        console.error("Failed to fetch profile", error);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    // In a real app, you would fetch this data from your API
-    const fetchProfile = async () => {
-      setLoading(true);
-      // const { data } = await api.get('/recruiter/profile');
-      const dummyData = {
-        companyName: 'TechSolutions Inc.',
-        website: 'https://techsolutions.com',
-        address: '123 Tech Street, Silicon Valley, CA',
-        phone: '123-456-7890',
-      };
-      setTimeout(() => { // Simulate API delay
-        setProfile(dummyData);
-        setLoading(false);
-      }, 1000);
-    };
-
     fetchProfile();
   }, []);
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setProfile({ ...profile, [name]: value });
+    setProfile({ ...profile, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
-    // In a real app, you would make a POST/PUT request to update the profile
-    console.log("Saving profile:", profile);
-    setTimeout(() => {
+    try {
+      await api.post("/recruiters/profile", profile);
+      // Refresh data and switch to view mode
+      await fetchProfile();
+      alert("Profile saved successfully");
+    } catch {
+      alert("Failed to save profile");
+    } finally {
       setSaving(false);
-      // Maybe show a success toast message
-    }, 1500);
+    }
   };
-  
-  if (loading) {
-      return <div>Loading profile...</div>
-  }
+
+  if (loading) return <div className="p-6">Loading profile...</div>;
 
   return (
     <div className="p-1">
-      <h1 className="text-3xl font-bold text-gray-800 mb-6">Recruiter Profile</h1>
+      <h1 className="text-3xl font-bold text-gray-800 mb-6">
+        {isEditing && status === 'new' ? 'Create Profile' : 'Recruiter Profile'}
+      </h1>
 
-      <div className="max-w-4xl mx-auto bg-white p-8 rounded-2xl shadow-md">
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {!isEditing ? (
+        <ProfileCard profile={profile} status={status} onEdit={() => setIsEditing(true)} />
+      ) : (
+        <div className="max-w-3xl bg-white p-8 rounded-2xl shadow-md animate-in slide-in-from-bottom-4 duration-300">
+          <div className="flex justify-between items-center mb-6 border-b pb-4">
+            <h2 className="text-xl font-bold text-gray-700">
+              {status === 'new' ? 'Setup Your Company Profile' : 'Edit Company Details'}
+            </h2>
+            {status !== 'new' && (
+              <button
+                onClick={() => setIsEditing(false)}
+                className="text-gray-400 hover:text-gray-600 transition"
+              >
+                <X size={24} />
+              </button>
+            )}
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-6">
             <ProfileInput
               label="Company Name"
               name="companyName"
-              type="text"
-              placeholder="Your company's name"
+              placeholder="Enter company name"
               value={profile.companyName}
               onChange={handleChange}
-              icon={<Building size={18} className="text-gray-400" />}
+              icon={status !== "new" ? <LockIcon size={18} className="text-gray-400" /> : <Building size={18} className="text-gray-400" />}
+              required
+              disabled={status !== "new"} // Disable if not new
+              title={status !== "new" ? "Company name cannot be changed once set" : ""}
             />
+
             <ProfileInput
-              label="Company Website"
-              name="website"
-              type="url"
-              placeholder="https://example.com"
-              value={profile.website}
-              onChange={handleChange}
-              icon={<Globe size={18} className="text-gray-400" />}
-            />
-            <ProfileInput
-              label="Phone Number"
-              name="phone"
-              type="tel"
-              placeholder="e.g., 123-456-7890"
-              value={profile.phone}
-              onChange={handleChange}
-              icon={<Phone size={18} className="text-gray-400" />}
-            />
-            <ProfileInput
-              label="Address"
-              name="address"
-              type="text"
-              placeholder="Company's full address"
-              value={profile.address}
+              label="Location"
+              name="location"
+              placeholder="City, Country or Remote"
+              value={profile.location}
               onChange={handleChange}
               icon={<MapPin size={18} className="text-gray-400" />}
             />
-          </div>
 
-          <div className="pt-4 border-t mt-6">
-            <button
-              type="submit"
-              disabled={saving}
-              className="w-full md:w-auto flex items-center justify-center gap-2 px-8 py-3 rounded-xl bg-indigo-600 text-white font-bold shadow-lg hover:bg-indigo-700 transition disabled:opacity-60"
-            >
-              {saving && (
-                <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
+            <ProfileTextarea
+              label="Company Description"
+              name="description"
+              placeholder="Short description about the company"
+              value={profile.description}
+              onChange={handleChange}
+              icon={<FileText size={18} className="text-gray-400" />}
+            />
+
+            <div className="pt-4 flex gap-3">
+              <button
+                type="submit"
+                disabled={saving}
+                className="px-6 py-3 rounded-xl bg-indigo-600 text-white font-semibold
+                hover:bg-indigo-700 transition disabled:opacity-60 flex items-center gap-2"
+              >
+                <Save size={18} />
+                {saving ? "Saving..." : "Save Changes"}
+              </button>
+
+              {status !== 'new' && (
+                <button
+                  type="button"
+                  onClick={() => setIsEditing(false)}
+                  className="px-6 py-3 rounded-xl bg-gray-100 text-gray-700 font-semibold
+                  hover:bg-gray-200 transition"
+                >
+                  Cancel
+                </button>
               )}
-              {saving ? 'Saving...' : 'Save Changes'}
-            </button>
-          </div>
-        </form>
-      </div>
+            </div>
+          </form>
+        </div>
+      )}
     </div>
   );
 }

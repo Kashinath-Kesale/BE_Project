@@ -43,7 +43,7 @@ export default function RecruiterSettings() {
         }
         setLoading(true);
         try {
-            await api.post("/recruiter/auth/change-password", { oldPassword: oldPass, newPassword: newPass });
+            await api.post("/auth/change-password", { oldPassword: oldPass, newPassword: newPass });
             alert("Password changed successfully!");
             // Clear fields on success
             setOldPass("");

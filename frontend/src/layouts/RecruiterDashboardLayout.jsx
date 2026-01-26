@@ -4,7 +4,6 @@ import { useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import RecruiterSidebar from "./RecruiterSidebar.jsx";
 import Navbar from "./Navbar.jsx";
-// ADD ICONS IMPORT
 import { LayoutGrid, Users, Briefcase, PlusSquare, User, Settings } from "lucide-react";
 
 const RecruiterDashboardLayout = () => {
@@ -13,7 +12,7 @@ const RecruiterDashboardLayout = () => {
 
   // 1. DEFINE the links array here
   const recruiterLinks = [
-    { name: "Dashboard", icon: <LayoutGrid size={20} />, path: "/recruiter" },
+    { name: "Dashboard", icon: <LayoutGrid size={20} />, path: "/recruiter/dashboard" },
     { name: "Applicants", icon: <Users size={20} />, path: "/recruiter/applicants" },
     { name: "My Jobs", icon: <Briefcase size={20} />, path: "/recruiter/my-jobs" },
     { name: "Create Job", icon: <PlusSquare size={20} />, path: "/recruiter/create-job" },
@@ -35,7 +34,11 @@ const RecruiterDashboardLayout = () => {
       />
 
       <div className={`flex-1 transition-all duration-300 ${isSidebarOpen ? "md:ml-60" : "md:ml-20"}`}>
-        <Navbar toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
+        <Navbar
+          toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+          role="recruiter"
+        />
+
         <main className="p-4 sm:p-6 lg:p-8 pt-20">
           
           {/* 4. ADD the dynamic header */}
