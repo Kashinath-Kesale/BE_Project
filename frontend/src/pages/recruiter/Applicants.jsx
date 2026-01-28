@@ -9,7 +9,9 @@ import {
   Star,
   Briefcase,
   User,
-  Loader2
+  Loader2,
+  FileText,
+  ExternalLink
 } from "lucide-react";
 
 // --- Status Badge ---
@@ -41,20 +43,34 @@ export default function Applicants() {
   const [filters, setFilters] = useState({ status: "all" });
   const [activeMenu, setActiveMenu] = useState(null);
 
+
+  const handleViewResume = (url) => {
+    if (!url) {
+      alert("No resume available for this candidate.");
+      return;
+    }
+    const fullUrl = url.startsWith("http") ? url : `${import.meta.env.VITE_BACKEND_URL || "http://localhost:5000"}${url}`;
+    window.open(fullUrl, "_blank");
+  };
+
   // Fetch applicants
   useEffect(() => {
-    // Reset state when jobId changes to avoid showing old data
+    // Reset state when jobId changes
     setApplications([]);
     setLoading(true);
 
+    const endpoint = jobId ? `/applications/job/${jobId}` : `/applications/recruiter`;
+
     api
-      .get(`/applications/job/${jobId}`)
+      .get(endpoint)
       .then((res) => {
         // Backend returns { applications: [...] }
-        setApplications(res.data.applications || []);
+        const apps = res.data.applications || [];
+        setApplications(apps);
       })
       .catch((err) => {
         console.error("Failed to fetch applicants", err);
+        setApplications([]);
       })
       .finally(() => setLoading(false));
   }, [jobId]);
@@ -86,8 +102,10 @@ export default function Applicants() {
   }
 
   return (
-    <div className="p-1">
-      <h1 className="text-3xl font-bold text-gray-800 mb-6">Applicants</h1>
+    <div className="p-1 min-h-[500px]">
+      <h1 className="text-3xl font-bold text-gray-800 mb-6">
+        {jobId ? "Job Applicants" : "All Applicants"}
+      </h1>
 
       {/* Filters */}
       <div className="flex items-center gap-4 mb-6 bg-white p-4 rounded-2xl shadow">
@@ -108,14 +126,16 @@ export default function Applicants() {
       </div>
 
       {/* Table - Only show if we have data */}
-      <div className="bg-white rounded-2xl shadow overflow-hidden">
+      {/* update: removed overflow-hidden to fix dropdown clipping */}
+      <div className="bg-white rounded-2xl shadow">
         {filteredApplications.length > 0 ? (
-          <div className="overflow-x-auto">
+          <div className="overflow-visible min-h-[300px]">
             <table className="w-full text-sm text-left text-gray-600">
               <thead className="bg-gray-50 text-xs uppercase text-gray-700">
                 <tr>
                   <th className="px-6 py-4">Candidate</th>
                   <th className="px-6 py-4">Applied On</th>
+                  <th className="px-6 py-4">Resume</th>
                   <th className="px-6 py-4">Status</th>
                   <th className="px-6 py-4 text-center">Actions</th>
                 </tr>
@@ -127,9 +147,9 @@ export default function Applicants() {
                     <td className="px-6 py-4 font-semibold text-gray-900">
                       <div className="flex items-center gap-3">
                         <img
-                          src={`https://i.pravatar.cc/40?u=${app.candidate?.email || 'default'}`}
+                          src={app.candidate?.avatarUrl || `https://ui-avatars.com/api/?name=${app.candidate?.name || 'User'}&background=random`}
                           alt={app.candidate?.name || 'Unknown'}
-                          className="w-10 h-10 rounded-full"
+                          className="w-10 h-10 rounded-full object-cover"
                         />
                         <div>
                           {app.candidate?.name || 'Unknown Candidate'}
@@ -145,44 +165,52 @@ export default function Applicants() {
                     </td>
 
                     <td className="px-6 py-4">
+                      <button
+                        onClick={() => handleViewResume(app.candidate?.resumeUrl)}
+                        className="flex items-center gap-1 text-indigo-600 hover:text-indigo-800 font-medium cursor-pointer"
+                      >
+                        <FileText size={16} /> View
+                      </button>
+                    </td>
+
+                    <td className="px-6 py-4">
                       <StatusBadge status={app.status} />
                     </td>
 
                     <td className="px-6 py-4 text-center">
-                      <div className="relative">
+                      <div className="relative inline-block text-left">
                         <button
                           onClick={() =>
                             setActiveMenu(activeMenu === app._id ? null : app._id)
                           }
-                          className="text-indigo-600 font-semibold flex items-center gap-1 mx-auto"
+                          className="text-indigo-600 font-semibold flex items-center gap-1 mx-auto px-3 py-1 hover:bg-indigo-50 rounded-lg transition"
                         >
                           Update <ChevronDown size={16} />
                         </button>
 
+                        {/* Dropdown Menu */}
                         {activeMenu === app._id && (
-                          <div className="absolute right-0 mt-2 w-40 bg-white border rounded-lg shadow-xl z-20">
-                            <button
-                              onClick={() =>
-                                handleStatusChange(app._id, "shortlisted")
-                              }
-                              className="w-full text-left px-4 py-3 hover:bg-blue-50 text-gray-700 hover:text-blue-700 transition"
-                            >
-                              Shortlist
-                            </button>
-                            <button
-                              onClick={() =>
-                                handleStatusChange(app._id, "rejected")
-                              }
-                              className="w-full text-left px-4 py-3 hover:bg-red-50 text-gray-700 hover:text-red-700 transition"
-                            >
-                              Reject
-                            </button>
-                            <button
-                              onClick={() => handleStatusChange(app._id, "hired")}
-                              className="w-full text-left px-4 py-3 hover:bg-green-50 text-gray-700 hover:text-green-700 transition"
-                            >
-                              Hire
-                            </button>
+                          <div className="absolute right-0 mt-2 w-48 bg-white border rounded-xl shadow-2xl z-50 ring-1 ring-black ring-opacity-5">
+                            <div className="py-1">
+                              <button
+                                onClick={() => handleStatusChange(app._id, "shortlisted")}
+                                className="flex items-center w-full px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition"
+                              >
+                                <Star size={16} className="mr-2" /> Shortlist
+                              </button>
+                              <button
+                                onClick={() => handleStatusChange(app._id, "rejected")}
+                                className="flex items-center w-full px-4 py-3 text-sm text-gray-700 hover:bg-red-50 hover:text-red-700 transition"
+                              >
+                                <X size={16} className="mr-2" /> Reject
+                              </button>
+                              <button
+                                onClick={() => handleStatusChange(app._id, "hired")}
+                                className="flex items-center w-full px-4 py-3 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700 transition"
+                              >
+                                <Check size={16} className="mr-2" /> Hire
+                              </button>
+                            </div>
                           </div>
                         )}
                       </div>
@@ -193,15 +221,23 @@ export default function Applicants() {
             </table>
           </div>
         ) : (
-          <div className="text-center py-16">
-            <Briefcase size={48} className="mx-auto text-gray-300" />
-            <h3 className="mt-3 text-xl font-bold text-gray-800">
+          <div className="text-center py-20 bg-gray-50 rounded-2xl border border-dashed border-gray-300">
+            <User size={48} className="mx-auto text-gray-300 mb-4" />
+            <h3 className="text-xl font-bold text-gray-800">
               No Applicants Found
             </h3>
             {filters.status !== "all" ? (
-              <p className="mt-2 text-gray-500">Try changing your filters.</p>
+              <p className="mt-2 text-gray-500">
+                No applicants match the selected status logic.
+              </p>
             ) : (
-              <p className="mt-2 text-gray-500">Wait for candidates to apply.</p>
+              <div className="mt-2 max-w-sm mx-auto text-gray-500">
+                {jobId ? (
+                  <p>This job hasn't received any applications yet. Consider promoting your job posting!</p>
+                ) : (
+                  <p>You haven't received any applications across your jobs yet.</p>
+                )}
+              </div>
             )}
           </div>
         )}

@@ -19,6 +19,6 @@ router.delete("/:id", protect, withdrawApplication);
 // Recruiter
 router.get("/recruiter", protect, getRecruiterApplications);
 router.get("/job/:jobId", protect, getJobApplications);
-router.put("/:id/status", protect, updateApplicationStatus);
+router.patch("/:id/status", protect, updateApplicationStatus);
 
 export default router;

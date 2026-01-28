@@ -140,9 +140,10 @@ export default function CreateJob() {
 
   return (
     <div className="p-1">
+      <h1 className="text-3xl font-bold text-gray-800 mb-6">Create New Job</h1>
       <form
         onSubmit={handleSubmit}
-        className="bg-white p-8 rounded-2xl shadow-lg max-w-4xl mx-auto"
+        className="bg-white p-8 rounded-2xl shadow-lg max-w-4xl"
       >
         <div className="grid grid-cols-1 gap-6">
           <FormInput

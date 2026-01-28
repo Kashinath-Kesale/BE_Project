@@ -1,6 +1,9 @@
+import Link from "mongoose"; // Mistake here? No wait, mongoose import required for mongoose.model
+import mongoose from "mongoose";
 import Application from "../models/Application.js";
 import Job from "../models/Job.js";
 import Recruiter from "../models/Recruiter.js";
+import Candidate from "../models/Candidate.js";
 
 // ✅ Candidate applies to a job
 export const applyToJob = async (req, res) => {
@@ -39,7 +42,7 @@ export const getMyApplications = async (req, res) => {
   }
 };
 
-// ✅ Recruiter views applications for their jobs
+// ✅ Recruiter views applications for their jobs (All Applications)
 export const getRecruiterApplications = async (req, res) => {
   try {
     const recruiter = await Recruiter.findOne({ userId: req.user._id });
@@ -48,11 +51,41 @@ export const getRecruiterApplications = async (req, res) => {
     const jobs = await Job.find({ recruiterId: recruiter._id });
     const jobIds = jobs.map((j) => j._id);
 
+    // Fetch applications
     const applications = await Application.find({ jobId: { $in: jobIds } })
-      .populate("candidateId", "name email") // candidate info
-      .populate("jobId", "title");
+      .populate("candidateId", "name email")
+      .populate("jobId", "title")
+      .lean();
 
-    res.json(applications);
+    // Fetch extra candidate details (avatar, resume from profile if not in app)
+    // We need to map over applications and find the candidate profile
+    const enhancedApplications = await Promise.all(applications.map(async (app) => {
+      // Find candidate profile for this user
+      // app.candidateId is the User object now due to populate
+      if (!app.candidateId) return app;
+
+      // map Candidate model
+      // const CandidateModel = mongoose.model("Candidate"); // We can use the imported model directly now
+
+      const candidateProfile = await Candidate.findOne({ userId: app.candidateId._id }).lean();
+
+
+
+      return {
+        ...app,
+        candidate: {
+          _id: app.candidateId._id,
+          name: app.candidateId.name,
+          email: app.candidateId.email,
+          avatarUrl: candidateProfile?.avatarUrl,
+          resumeUrl: app.resumeUrl || candidateProfile?.resumeUrl,
+          phone: candidateProfile?.phone,
+          skills: candidateProfile?.keywords || []
+        }
+      };
+    }));
+
+    res.json({ applications: enhancedApplications });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -63,14 +96,11 @@ export const getJobApplications = async (req, res) => {
   try {
     const { jobId } = req.params;
 
-    // Verify job belongs to recruiter
     const job = await Job.findOne({ _id: jobId });
     if (!job) {
       return res.status(404).json({ message: "Job not found" });
     }
 
-    // Check if current user is the owner of the job
-    // (We need to find the recruiter profile first)
     const recruiter = await Recruiter.findOne({ userId: req.user._id });
     if (!recruiter || job.recruiterId.toString() !== recruiter._id.toString()) {
       return res.status(403).json({ message: "Not authorized to view these applications" });
@@ -78,12 +108,29 @@ export const getJobApplications = async (req, res) => {
 
     const applications = await Application.find({ jobId })
       .populate("candidateId", "name email")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
 
-    // Format response to match frontend expectation
-    // Frontend expects { applications: [...] } or just [...]?
-    // Looking at Applicants.jsx: res.data.applications
-    res.json({ applications });
+    const enhancedApplications = await Promise.all(applications.map(async (app) => {
+      if (!app.candidateId) return app;
+
+      const candidateProfile = await Candidate.findOne({ userId: app.candidateId._id }).lean();
+
+      return {
+        ...app,
+        candidate: {
+          _id: app.candidateId._id,
+          name: app.candidateId.name,
+          email: app.candidateId.email,
+          avatarUrl: candidateProfile?.avatarUrl,
+          resumeUrl: app.resumeUrl || candidateProfile?.resumeUrl,
+          phone: candidateProfile?.phone,
+          skills: candidateProfile?.keywords || []
+        }
+      };
+    }));
+
+    res.json({ applications: enhancedApplications });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

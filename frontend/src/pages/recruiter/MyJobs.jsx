@@ -33,7 +33,7 @@ const JobCard = ({ job, onMenuClick, onDelete, navigate }) => (
         {job.menuOpen && (
           <div className="absolute right-0 mt-2 w-44 bg-white border rounded-lg shadow-lg z-10">
             <button
-              onClick={() => navigate(`/recruiter/jobs/${job._id}/applicants`)}
+              onClick={() => navigate(`/recruiter/applicants/${job._id}`)}
               className="w-full flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100"
             >
               <Eye size={16} /> View Applicants
@@ -68,12 +68,18 @@ const JobCard = ({ job, onMenuClick, onDelete, navigate }) => (
       </div>
     </div>
 
-    <div className="mt-4 flex items-center gap-3 bg-indigo-50 p-3 rounded-lg">
-      <Users size={18} className="text-indigo-600" />
-      <span className="font-semibold text-indigo-800">
-        Applicants
-      </span>
-    </div>
+    <button
+      onClick={() => navigate(`/recruiter/applicants/${job._id}`)}
+      className="w-full mt-4 flex items-center justify-between bg-indigo-50 p-3 rounded-lg hover:bg-indigo-100 transition cursor-pointer text-left"
+    >
+      <div className="flex items-center gap-3">
+        <Users size={18} className="text-indigo-600" />
+        <span className="font-semibold text-indigo-800">
+          Applicants
+        </span>
+      </div>
+      <Eye size={16} className="text-indigo-400" />
+    </button>
   </div>
 );
 
@@ -117,7 +123,7 @@ export default function MyJobs() {
         }));
         setJobs(jobsWithMenu);
       })
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => setLoading(false));
   }, []);
 
