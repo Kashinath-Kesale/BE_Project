@@ -54,7 +54,7 @@ export default function RecruiterSettings() {
                         <p className="text-gray-500 mt-1">Manage your password and security settings.</p>
                     </div>
 
-                    {/* Forgot Password Link - The "Update via Email" feature */}
+                    {/* Forgot Password Link */}
                     <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                         <p className="text-sm text-gray-700 mb-2">
                             Don't remember your current password?

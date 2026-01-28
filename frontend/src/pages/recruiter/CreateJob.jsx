@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../services/api";
 
-// --- Reusable Components ---
+// Reusable Components
 
 const FormInput = ({ id, label, ...props }) => (
   <div>
@@ -84,8 +84,6 @@ const KeywordInput = ({ keywords, setKeywords }) => {
     </div>
   );
 };
-
-// --- Main Component ---
 
 export default function CreateJob() {
   const navigate = useNavigate();

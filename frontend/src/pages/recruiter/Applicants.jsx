@@ -14,8 +14,7 @@ import {
   ExternalLink
 } from "lucide-react";
 
-// --- Status Badge ---
-
+// Status Badge Component
 const StatusBadge = ({ status }) => {
   const map = {
     applied: { cls: "bg-yellow-100 text-yellow-800", icon: <User size={14} /> },
@@ -33,8 +32,6 @@ const StatusBadge = ({ status }) => {
     </span>
   );
 };
-
-// --- Main Component ---
 
 export default function Applicants() {
   const { jobId } = useParams();
@@ -126,100 +123,168 @@ export default function Applicants() {
       </div>
 
       {/* Table - Only show if we have data */}
-      {/* update: removed overflow-hidden to fix dropdown clipping */}
       <div className="bg-white rounded-2xl shadow">
         {filteredApplications.length > 0 ? (
-          <div className="overflow-visible min-h-[300px]">
-            <table className="w-full text-sm text-left text-gray-600">
-              <thead className="bg-gray-50 text-xs uppercase text-gray-700">
-                <tr>
-                  <th className="px-6 py-4">Candidate</th>
-                  <th className="px-6 py-4">Applied On</th>
-                  <th className="px-6 py-4">Resume</th>
-                  <th className="px-6 py-4">Status</th>
-                  <th className="px-6 py-4 text-center">Actions</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {filteredApplications.map((app) => (
-                  <tr key={app._id} className="border-b hover:bg-gray-50 transition">
-                    <td className="px-6 py-4 font-semibold text-gray-900">
-                      <div className="flex items-center gap-3">
-                        <img
-                          src={app.candidate?.avatarUrl || `https://ui-avatars.com/api/?name=${app.candidate?.name || 'User'}&background=random`}
-                          alt={app.candidate?.name || 'Unknown'}
-                          className="w-10 h-10 rounded-full object-cover"
-                        />
-                        <div>
-                          {app.candidate?.name || 'Unknown Candidate'}
-                          <p className="text-xs text-gray-500">
-                            {app.candidate?.email || ''}
-                          </p>
-                        </div>
-                      </div>
-                    </td>
-
-                    <td className="px-6 py-4">
-                      {new Date(app.createdAt).toLocaleDateString()}
-                    </td>
-
-                    <td className="px-6 py-4">
-                      <button
-                        onClick={() => handleViewResume(app.candidate?.resumeUrl)}
-                        className="flex items-center gap-1 text-indigo-600 hover:text-indigo-800 font-medium cursor-pointer"
-                      >
-                        <FileText size={16} /> View
-                      </button>
-                    </td>
-
-                    <td className="px-6 py-4">
-                      <StatusBadge status={app.status} />
-                    </td>
-
-                    <td className="px-6 py-4 text-center">
-                      <div className="relative inline-block text-left">
-                        <button
-                          onClick={() =>
-                            setActiveMenu(activeMenu === app._id ? null : app._id)
-                          }
-                          className="text-indigo-600 font-semibold flex items-center gap-1 mx-auto px-3 py-1 hover:bg-indigo-50 rounded-lg transition"
-                        >
-                          Update <ChevronDown size={16} />
-                        </button>
-
-                        {/* Dropdown Menu */}
-                        {activeMenu === app._id && (
-                          <div className="absolute right-0 mt-2 w-48 bg-white border rounded-xl shadow-2xl z-50 ring-1 ring-black ring-opacity-5">
-                            <div className="py-1">
-                              <button
-                                onClick={() => handleStatusChange(app._id, "shortlisted")}
-                                className="flex items-center w-full px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition"
-                              >
-                                <Star size={16} className="mr-2" /> Shortlist
-                              </button>
-                              <button
-                                onClick={() => handleStatusChange(app._id, "rejected")}
-                                className="flex items-center w-full px-4 py-3 text-sm text-gray-700 hover:bg-red-50 hover:text-red-700 transition"
-                              >
-                                <X size={16} className="mr-2" /> Reject
-                              </button>
-                              <button
-                                onClick={() => handleStatusChange(app._id, "hired")}
-                                className="flex items-center w-full px-4 py-3 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700 transition"
-                              >
-                                <Check size={16} className="mr-2" /> Hire
-                              </button>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </td>
+          <>
+            {/* Desktop View - Table */}
+            <div className="hidden md:block overflow-visible min-h-[300px]">
+              <table className="w-full text-sm text-left text-gray-600">
+                <thead className="bg-gray-50 text-xs uppercase text-gray-700">
+                  <tr>
+                    <th className="px-6 py-4">Candidate</th>
+                    <th className="px-6 py-4">Job Role</th>
+                    <th className="px-6 py-4">Applied On</th>
+                    <th className="px-6 py-4">Resume</th>
+                    <th className="px-6 py-4">Status</th>
+                    <th className="px-6 py-4 text-center">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+
+                <tbody>
+                  {filteredApplications.map((app) => (
+                    <tr key={app._id} className="border-b hover:bg-gray-50 transition">
+                      <td className="px-6 py-4 font-semibold text-gray-900">
+                        <div className="flex items-center gap-3">
+                          <img
+                            src={app.candidate?.avatarUrl || `https://ui-avatars.com/api/?name=${app.candidate?.name || 'User'}&background=random`}
+                            alt={app.candidate?.name || 'Unknown'}
+                            className="w-10 h-10 rounded-full object-cover"
+                          />
+                          <div>
+                            {app.candidate?.name || 'Unknown Candidate'}
+                            <p className="text-xs text-gray-500">
+                              {app.candidate?.email || ''}
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+
+                      <td className="px-6 py-4 text-gray-800 font-medium">
+                        {app.jobId?.title || "Unknown Role"}
+                      </td>
+
+                      <td className="px-6 py-4">
+                        {new Date(app.createdAt).toLocaleDateString()}
+                      </td>
+
+                      <td className="px-6 py-4">
+                        <button
+                          onClick={() => handleViewResume(app.candidate?.resumeUrl)}
+                          className="flex items-center gap-1 text-indigo-600 hover:text-indigo-800 font-medium cursor-pointer"
+                        >
+                          <FileText size={16} /> View
+                        </button>
+                      </td>
+
+                      <td className="px-6 py-4">
+                        <StatusBadge status={app.status} />
+                      </td>
+
+                      <td className="px-6 py-4 text-center">
+                        <div className="relative inline-block text-left">
+                          <button
+                            onClick={() =>
+                              setActiveMenu(activeMenu === app._id ? null : app._id)
+                            }
+                            className="text-indigo-600 font-semibold flex items-center gap-1 mx-auto px-3 py-1 hover:bg-indigo-50 rounded-lg transition"
+                          >
+                            Update <ChevronDown size={16} />
+                          </button>
+
+                          {/* Dropdown Menu */}
+                          {activeMenu === app._id && (
+                            <div className="absolute right-0 mt-2 w-48 bg-white border rounded-xl shadow-2xl z-50 ring-1 ring-black ring-opacity-5">
+                              <div className="py-1">
+                                <button
+                                  onClick={() => handleStatusChange(app._id, "shortlisted")}
+                                  className="flex items-center w-full px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition"
+                                >
+                                  <Star size={16} className="mr-2" /> Shortlist
+                                </button>
+                                <button
+                                  onClick={() => handleStatusChange(app._id, "rejected")}
+                                  className="flex items-center w-full px-4 py-3 text-sm text-gray-700 hover:bg-red-50 hover:text-red-700 transition"
+                                >
+                                  <X size={16} className="mr-2" /> Reject
+                                </button>
+                                <button
+                                  onClick={() => handleStatusChange(app._id, "hired")}
+                                  className="flex items-center w-full px-4 py-3 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700 transition"
+                                >
+                                  <Check size={16} className="mr-2" /> Hire
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile View - Cards */}
+            <div className="md:hidden space-y-4 p-4">
+              {filteredApplications.map((app) => (
+                <div key={app._id} className="border rounded-xl p-4 bg-gray-50/50">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={app.candidate?.avatarUrl || `https://ui-avatars.com/api/?name=${app.candidate?.name || 'User'}&background=random`}
+                        alt={app.candidate?.name || 'Unknown'}
+                        className="w-10 h-10 rounded-full object-cover"
+                      />
+                      <div>
+                        <div className="font-semibold text-gray-900">{app.candidate?.name || 'Unknown Candidate'}</div>
+                        <div className="text-xs text-gray-500">{app.candidate?.email}</div>
+                      </div>
+                    </div>
+                    <StatusBadge status={app.status} />
+                  </div>
+
+                  <div className="mb-3">
+                    <span className="text-sm font-medium text-gray-700">Applied for: </span>
+                    <span className="text-sm text-indigo-600 font-semibold">{app.jobId?.title || "Unknown Role"}</span>
+                  </div>
+
+                  <div className="flex items-center justify-between text-sm text-gray-600 mb-4">
+                    <div>
+                      Applied: {new Date(app.createdAt).toLocaleDateString()}
+                    </div>
+                    <button
+                      onClick={() => handleViewResume(app.candidate?.resumeUrl)}
+                      className="flex items-center gap-1 text-indigo-600 hover:text-indigo-800 font-medium cursor-pointer"
+                    >
+                      <FileText size={16} /> Resume
+                    </button>
+                  </div>
+
+                  {/* Mobile Actions */}
+                  <div className="grid grid-cols-3 gap-2">
+                    <button
+                      onClick={() => handleStatusChange(app._id, "shortlisted")}
+                      className={`flex flex-col items-center justify-center p-2 rounded-lg border text-xs font-medium transition ${app.status === 'shortlisted' ? 'bg-blue-100 border-blue-200 text-blue-700' : 'bg-white border-gray-200 text-gray-700'}`}
+                    >
+                      <Star size={16} className="mb-1" /> Shortlist
+                    </button>
+                    <button
+                      onClick={() => handleStatusChange(app._id, "rejected")}
+                      className={`flex flex-col items-center justify-center p-2 rounded-lg border text-xs font-medium transition ${app.status === 'rejected' ? 'bg-red-100 border-red-200 text-red-700' : 'bg-white border-gray-200 text-gray-700'}`}
+                    >
+                      <X size={16} className="mb-1" /> Reject
+                    </button>
+                    <button
+                      onClick={() => handleStatusChange(app._id, "hired")}
+                      className={`flex flex-col items-center justify-center p-2 rounded-lg border text-xs font-medium transition ${app.status === 'hired' ? 'bg-green-100 border-green-200 text-green-700' : 'bg-white border-gray-200 text-gray-700'}`}
+                    >
+                      <Check size={16} className="mb-1" /> Hire
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         ) : (
           <div className="text-center py-20 bg-gray-50 rounded-2xl border border-dashed border-gray-300">
             <User size={48} className="mx-auto text-gray-300 mb-4" />

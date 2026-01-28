@@ -9,8 +9,7 @@ import {
   AlertCircle
 } from "lucide-react";
 
-// --- Reusable Components ---
-
+// Reusable Components
 const StatCard = ({ icon, title, value, color }) => (
   <div className="bg-white p-6 rounded-2xl shadow-md flex items-center gap-5 transition-transform hover:-translate-y-1">
     <div className={`w-14 h-14 rounded-full flex items-center justify-center ${color}`}>
@@ -33,7 +32,7 @@ const ApplicantRow = ({ name, jobTitle, status }) => {
     <div className="flex items-center justify-between p-4 bg-white rounded-xl mb-3 shadow-sm hover:shadow-md">
       <div className="flex items-center gap-4">
         <img
-          src={`https://i.pravatar.cc/40?u=${name}`}
+          src={`https://ui-avatars.com/api/?name=${name}&background=random`}
           alt={name}
           className="w-10 h-10 rounded-full"
         />
@@ -52,8 +51,7 @@ const ApplicantRow = ({ name, jobTitle, status }) => {
   );
 };
 
-// --- Main Dashboard Component ---
-
+// Main Dashboard Component
 export default function Dashboard() {
   const navigate = useNavigate();
   const [recruiter, setRecruiter] = useState(null);

@@ -6,15 +6,15 @@ import path from "path";
 
 const PARSER_URL = process.env.PARSER_URL || "http://localhost:8000/parse"; // python service
 
-// Upload resume, call parser, save parsedText & keywords
+// Upload resume and parse content
 export const uploadResume = async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ message: "No file uploaded" });
 
-    const filePath = req.file.path; // absolute
-    const publicUrl = `/uploads/resumes/${req.user._id}/${req.file.filename}`; // if you serve static files
+    const filePath = req.file.path;
+    const publicUrl = `/uploads/resumes/${req.user._id}/${req.file.filename}`;
 
-    // call external parser service with formdata
+    // Call external parser service
     const form = new FormData();
     form.append("file", fs.createReadStream(filePath));
 

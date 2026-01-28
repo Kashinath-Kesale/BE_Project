@@ -16,30 +16,19 @@ export default function Verify() {
 
       if (!token) {
         setStatus("error");
-        setMessage("No verification token found. The link seems incomplete.");
+        setMessage("No verification token found.");
         return;
       }
 
       try {
-        console.log("🔍 Verifying token:", token);
-
-        // ✅ Call backend verify endpoint
         const { data } = await api.get(`/auth/verify?token=${token}`);
-
-        console.log("✅ Verification API response:", data);
-
         setStatus("success");
-        setMessage(data.message || "Your email has been verified successfully!");
-
-        // ✅ Auto redirect to login after 3s
+        setMessage(data.message || "Email verified successfully!");
         setTimeout(() => navigate("/login"), 3000);
       } catch (err) {
-        console.error("❌ Verification API error:", err);
+        console.error("Verification error:", err);
         setStatus("error");
-        setMessage(
-          err.response?.data?.message ||
-            "Verification failed. The link may be invalid or expired."
-        );
+        setMessage(err.response?.data?.message || "Verification failed.");
       }
     };
 

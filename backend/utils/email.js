@@ -23,7 +23,7 @@ if (RESEND_API_KEY) {
  */
 export const sendEmail = async ({ to, subject, html }) => {
   if (!RESEND_API_KEY || !resend) {
-    throw new Error('RESEND_API_KEY is not configured. Please set RESEND_API_KEY in your environment variables.');
+    throw new Error('RESEND_API_KEY is not configured.');
   }
 
   try {
@@ -34,21 +34,12 @@ export const sendEmail = async ({ to, subject, html }) => {
       html,
     });
 
-    // Check if Resend returned an error
-    if (info.error) {
-      throw new Error(`Resend Error: ${info.error.message}`);
-    }
+    if (info.error) throw new Error(`Resend Error: ${info.error.message}`);
 
-    console.log('✅ Email sent successfully via Resend:', info);
+    console.log('Email sent:', info.id);
     return info;
   } catch (error) {
-    console.error('❌ Error sending email via Resend:', error);
-    // Log detailed error information for debugging
-    if (error.response) {
-      console.error('Resend API Error Details:', JSON.stringify(error.response.data, null, 2));
-    } else if (error.message) {
-      console.error('Error message:', error.message);
-    }
+    console.error('Email send failed:', error.message);
     throw error;
   }
 };

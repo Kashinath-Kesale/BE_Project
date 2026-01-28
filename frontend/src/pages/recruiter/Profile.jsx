@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import api from "../../services/api";
 import { Building, MapPin, FileText, Edit2, Save, X, Lock as LockIcon } from "lucide-react";
 
-// --- Reusable Input Components ---
+// Reusable Input Components
 
 const ProfileInput = ({ icon, label, ...props }) => (
   <div>
@@ -42,7 +41,7 @@ const ProfileTextarea = ({ icon, label, ...props }) => (
   </div>
 );
 
-// --- View Mode Component (Card) ---
+// View Mode Component (Card)
 
 const ProfileCard = ({ profile, status, onEdit }) => (
   <div className="max-w-3xl bg-white rounded-2xl shadow-md overflow-hidden animate-in fade-in duration-300">
@@ -96,10 +95,7 @@ const ProfileCard = ({ profile, status, onEdit }) => (
 );
 
 
-// --- Main Profile Component ---
-
 export default function Profile() {
-  const navigate = useNavigate();
   const [profile, setProfile] = useState({
     companyName: "",
     location: "",

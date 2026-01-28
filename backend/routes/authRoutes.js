@@ -6,9 +6,11 @@ const router = express.Router();
 
 router.post("/register", registerUser);
 router.post("/login", loginUser);
-router.get("/verify", verifyEmail); // ✅ route fixed
+// Verify email
+router.get("/verify", verifyEmail);
 router.post("/resend-verification", resendVerification);
-// Protected route to get current user info from token
+
+// Message: Get current user info
 router.get("/me", protect, getCurrentUser);
 router.post("/change-password", protect, changePassword);
 router.post("/forgot-password", forgotPassword);

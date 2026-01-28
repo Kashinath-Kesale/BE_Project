@@ -34,7 +34,7 @@ export default function JobsList() {
           pct: j.matchPercentage ?? 0,
         }));
         if (mounted) setJobs(mapped);
-      } catch (e) {
+      } catch {
         if (mounted) setError("Failed to load jobs");
       } finally {
         if (mounted) setLoading(false);

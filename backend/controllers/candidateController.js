@@ -46,7 +46,7 @@ export const getCandidateProfile = async (req, res) => {
 
     // If no candidate profile exists, return empty profile with user info
     if (!candidate) {
-      return res.json({ 
+      return res.json({
         candidate: {
           userId: {
             _id: req.user._id,
@@ -60,8 +60,8 @@ export const getCandidateProfile = async (req, res) => {
           resumeUrl: null,
           parsedText: "",
           keywords: []
-        }, 
-        profileCompletion: 0 
+        },
+        profileCompletion: 0
       });
     }
 
@@ -73,7 +73,7 @@ export const getCandidateProfile = async (req, res) => {
   }
 };
 
-// Upload profile avatar
+// Upload avatar
 export const uploadAvatar = async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ message: "No file uploaded" });

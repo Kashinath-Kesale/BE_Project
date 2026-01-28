@@ -46,7 +46,6 @@ export default function Settings() {
     };
 
     return (
-        // Removed min-h-screen and adjusted padding for a more natural fit within a dashboard layout.
         <div className="bg-gray-50 w-full p-4 sm:p-6 lg:p-8">
             <div className="max-w-2xl mx-auto">
                 <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8">
@@ -61,8 +60,8 @@ export default function Settings() {
                         <p className="text-sm text-gray-700 mb-2">
                             Don't remember your current password?
                         </p>
-                        <Link 
-                            to="/forgot-password" 
+                        <Link
+                            to="/forgot-password"
                             className="text-sm font-semibold text-indigo-600 hover:text-indigo-800 hover:underline"
                         >
                             Reset your password via email →
@@ -72,7 +71,7 @@ export default function Settings() {
                     {/* Change Password Form */}
                     <form onSubmit={handleChangePassword}>
                         <div className="space-y-6">
-                             <div>
+                            <div>
                                 <label htmlFor="oldPass" className="block text-sm font-medium text-gray-700 mb-1">
                                     Old Password
                                 </label>

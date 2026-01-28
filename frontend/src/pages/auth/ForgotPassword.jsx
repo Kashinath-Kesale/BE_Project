@@ -16,15 +16,11 @@ export default function ForgotPassword() {
     setMessage("");
 
     try {
-      console.log("🟢 Sending forgot password request to:", "/auth/forgot-password");
       const res = await api.post("/auth/forgot-password", { email });
-      console.log("✅ Response received:", res.data);
       setMessage(res.data.message || "If that email exists, a password reset link has been sent.");
     } catch (err) {
-      console.error("❌ Forgot password error:", err);
-      console.error("Error response:", err?.response);
-      const errorMessage = err?.response?.data?.message || 
-                          (err?.response?.status === 404 ? "Backend route not found. Please check if the server is running and restarted." : "Failed to send reset email. Please try again.");
+      console.error("Forgot password error:", err);
+      const errorMessage = err?.response?.data?.message || "Failed to send reset email.";
       setError(errorMessage);
     } finally {
       setLoading(false);

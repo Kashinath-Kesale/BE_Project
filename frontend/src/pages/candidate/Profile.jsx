@@ -98,7 +98,7 @@ export default function Profile() {
 
     const validateForm = () => {
         const newErrors = {};
-        
+
         // Phone validation (10 digits, optional formatting)
         if (form.phone && !/^[\d\s\-()]+$/.test(form.phone)) {
             newErrors.phone = "Phone number should contain only digits, spaces, hyphens, or parentheses";
@@ -106,17 +106,17 @@ export default function Profile() {
         if (form.phone && form.phone.replace(/\D/g, '').length < 10) {
             newErrors.phone = "Phone number should have at least 10 digits";
         }
-        
+
         // Roll number validation (not empty if provided)
         if (form.rollNo && form.rollNo.trim().length < 3) {
             newErrors.rollNo = "Roll number should be at least 3 characters";
         }
-        
+
         // Branch validation
         if (form.branch && form.branch.trim().length < 2) {
             newErrors.branch = "Branch should be at least 2 characters";
         }
-        
+
         // Year validation (should be 4 digits and reasonable range)
         if (form.education.year) {
             const year = parseInt(form.education.year);
@@ -127,7 +127,7 @@ export default function Profile() {
                 newErrors.year = `Year should be between 1950 and ${currentYear + 10}`;
             }
         }
-        
+
         // CGPA validation (0-10 or 0-100 for percentage)
         if (form.education.cgpa) {
             const cgpa = parseFloat(form.education.cgpa);
@@ -137,27 +137,27 @@ export default function Profile() {
                 newErrors.cgpa = "CGPA should be between 0 and 10 (or 0-100 for percentage)";
             }
         }
-        
+
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
 
     const handleSave = async (e) => {
         e.preventDefault();
-        
+
         // Validate form before submitting
         if (!validateForm()) {
             alert("Please fix the errors in the form before saving.");
             return;
         }
-        
+
         setSaving(true);
         try {
             const res = await api.post("/candidate/profile", form);
             setCandidate(res.data.candidate);
             setCompletion(res.data.profileCompletion);
             alert("Profile updated successfully!");
-            
+
             // Trigger profile refresh event for ProfileCard on dashboard
             window.dispatchEvent(new CustomEvent('profileUpdated'));
         } catch (err) {
@@ -167,7 +167,7 @@ export default function Profile() {
             setSaving(false);
         }
     };
-    
+
     if (loading) {
         return (
             <div className="bg-gray-50 w-full p-8 flex justify-center items-center h-screen">
@@ -188,13 +188,12 @@ export default function Profile() {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
                     {/* Left Column: Profile Completion */}
                     <div className="lg:col-span-1">
-                         <ProfileCompletion completion={completion} />
+                        <ProfileCompletion completion={completion} />
                     </div>
 
-                    {/* Right Column: Edit Form */}
                     <div className="lg:col-span-2">
                         <form onSubmit={handleSave} className="bg-white rounded-2xl shadow-lg p-6 md:p-8">
-                             <div className="mb-6 pb-4 border-b border-gray-200">
+                            <div className="mb-6 pb-4 border-b border-gray-200">
                                 <h2 className="text-xl font-bold text-gray-800">Personal Information</h2>
                                 {candidate?.userId?.email && <p className="text-gray-500">{candidate.userId.email}</p>}
                             </div>
@@ -202,30 +201,30 @@ export default function Profile() {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
                                     <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-                                    <input 
-                                        id="phone" 
-                                        name="phone" 
-                                        value={form.phone} 
-                                        onChange={handleChange} 
+                                    <input
+                                        id="phone"
+                                        name="phone"
+                                        value={form.phone}
+                                        onChange={handleChange}
                                         className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow ${errors.phone ? 'border-red-500' : 'border-gray-300'}`}
-                                        placeholder="e.g., 987-654-3210" 
+                                        placeholder="e.g., 987-654-3210"
                                     />
                                     {errors.phone && <p className="text-xs text-red-600 mt-1">{errors.phone}</p>}
                                 </div>
                                 <div>
                                     <label htmlFor="rollNo" className="block text-sm font-medium text-gray-700 mb-1">Roll No.</label>
-                                    <input 
-                                        id="rollNo" 
-                                        name="rollNo" 
-                                        value={form.rollNo} 
-                                        onChange={handleChange} 
+                                    <input
+                                        id="rollNo"
+                                        name="rollNo"
+                                        value={form.rollNo}
+                                        onChange={handleChange}
                                         className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow ${errors.rollNo ? 'border-red-500' : 'border-gray-300'}`}
-                                        placeholder="e.g., BE12345" 
+                                        placeholder="e.g., BE12345"
                                     />
                                     {errors.rollNo && <p className="text-xs text-red-600 mt-1">{errors.rollNo}</p>}
                                 </div>
                             </div>
-                            
+
                             <div className="mt-8 mb-6 pb-4 border-b border-gray-200">
                                 <h2 className="text-xl font-bold text-gray-800">Academic Details</h2>
                             </div>
@@ -233,23 +232,23 @@ export default function Profile() {
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                 <div className="md:col-span-1">
                                     <label htmlFor="branch" className="block text-sm font-medium text-gray-700 mb-1">Branch</label>
-                                    <input 
-                                        id="branch" 
-                                        name="branch" 
-                                        value={form.branch} 
-                                        onChange={handleChange} 
+                                    <input
+                                        id="branch"
+                                        name="branch"
+                                        value={form.branch}
+                                        onChange={handleChange}
                                         className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow ${errors.branch ? 'border-red-500' : 'border-gray-300'}`}
-                                        placeholder="e.g., IT" 
+                                        placeholder="e.g., IT"
                                     />
                                     {errors.branch && <p className="text-xs text-red-600 mt-1">{errors.branch}</p>}
                                 </div>
                                 <div className="md:col-span-1">
                                     <label htmlFor="year" className="block text-sm font-medium text-gray-700 mb-1">Passing Year</label>
-                                    <input 
-                                        id="year" 
-                                        name="year" 
-                                        value={form.education.year} 
-                                        onChange={handleChange} 
+                                    <input
+                                        id="year"
+                                        name="year"
+                                        value={form.education.year}
+                                        onChange={handleChange}
                                         className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow ${errors.year ? 'border-red-500' : 'border-gray-300'}`}
                                         placeholder="e.g., 2025"
                                     />
@@ -257,11 +256,11 @@ export default function Profile() {
                                 </div>
                                 <div className="md:col-span-1">
                                     <label htmlFor="cgpa" className="block text-sm font-medium text-gray-700 mb-1">CGPA / %</label>
-                                    <input 
-                                        id="cgpa" 
-                                        name="cgpa" 
-                                        value={form.education.cgpa} 
-                                        onChange={handleChange} 
+                                    <input
+                                        id="cgpa"
+                                        name="cgpa"
+                                        value={form.education.cgpa}
+                                        onChange={handleChange}
                                         className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow ${errors.cgpa ? 'border-red-500' : 'border-gray-300'}`}
                                         placeholder="e.g., 9.0"
                                     />
@@ -310,7 +309,7 @@ export default function Profile() {
 
                             {/* Actions */}
                             <div className="mt-8 pt-6 border-t border-gray-200 flex items-center justify-end gap-4">
-                               <button type="button" onClick={fetchProfile} className="px-6 py-2.5 rounded-lg font-semibold border border-gray-300 text-gray-700 hover:bg-gray-100 transition-colors">
+                                <button type="button" onClick={fetchProfile} className="px-6 py-2.5 rounded-lg font-semibold border border-gray-300 text-gray-700 hover:bg-gray-100 transition-colors">
                                     Reset
                                 </button>
                                 <button type="submit" disabled={saving} className="px-6 py-2.5 rounded-lg text-white font-semibold bg-indigo-600 hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md">

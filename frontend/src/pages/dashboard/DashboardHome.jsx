@@ -9,7 +9,7 @@ const LightbulbIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" h
 
 const JobsList = ({ jobs, loading }) => {
   const navigate = useNavigate();
-  
+
   if (loading) {
     return (
       <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-200">
@@ -31,7 +31,7 @@ const JobsList = ({ jobs, loading }) => {
       <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-200">
         <h3 className="font-bold text-gray-800 text-lg mb-4 flex items-center gap-2"><BriefcaseIcon /> Top Job Matches</h3>
         <p className="text-sm text-gray-500 text-center py-4">No job matches yet. Upload your resume to see personalized job recommendations!</p>
-        <button 
+        <button
           onClick={() => navigate('/candidate/jobs')}
           className="w-full mt-4 px-4 py-2 text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors"
         >
@@ -49,7 +49,11 @@ const JobsList = ({ jobs, loading }) => {
           const job = item.job || item;
           const match = item.matchPercentage || 0;
           return (
-            <div key={job._id} className="p-4 rounded-lg border bg-gray-50 flex items-center justify-between hover:border-indigo-300 transition-colors">
+            <div
+              key={job._id}
+              onClick={() => navigate('/candidate/jobs', { state: { openJobId: job._id } })}
+              className="p-4 rounded-lg border bg-gray-50 flex items-center justify-between hover:border-indigo-300 transition-all cursor-pointer hover:shadow-md"
+            >
               <div>
                 <p className="font-semibold text-gray-800">{job.title}</p>
                 <p className="text-sm text-gray-500">{job.companyName || 'Company'}{job.location ? ` • ${job.location}` : ''}</p>
@@ -59,7 +63,7 @@ const JobsList = ({ jobs, loading }) => {
           );
         })}
       </div>
-      <Link 
+      <Link
         to="/candidate/jobs"
         className="block w-full mt-6 px-4 py-2 text-sm font-semibold text-center text-indigo-600 hover:text-indigo-800 transition-colors"
       >
@@ -166,7 +170,7 @@ const DashboardHome = () => {
           <h1 className="text-3xl font-bold text-gray-900">Welcome Back{user ? `, ${user}` : ''}!</h1>
           <p className="text-gray-500 mt-1">Here's your career snapshot. Let's find your next opportunity.</p>
         </div>
-        
+
         {/* Main Grid Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
           {/* Left Column */}
@@ -174,7 +178,7 @@ const DashboardHome = () => {
             <ProfileCard />
             <ResumeUpload />
           </div>
-          
+
           {/* Right Column */}
           <div className="lg:col-span-2 space-y-8">
             <JobsList jobs={jobs} loading={loading} />

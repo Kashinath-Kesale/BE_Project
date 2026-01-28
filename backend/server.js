@@ -3,9 +3,10 @@ import cors from "cors";
 import morgan from "morgan";
 import path from "path";
 import dotenv from "dotenv";
-dotenv.config();
+import helmet from "helmet";
+import mongoSanitize from "express-mongo-sanitize";
+import rateLimit from "express-rate-limit";
 import connectDB from "./config/db.js";
-connectDB();
 
 // Routes
 import authRoutes from "./routes/authRoutes.js";
@@ -16,17 +17,48 @@ import jobRoutes from "./routes/jobRoutes.js";
 import applicationRoutes from "./routes/applicationRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 
-const app = express();
+dotenv.config();
+connectDB();
 
-// Middleware
+const app = express();
+const PORT = process.env.PORT || 5000;
+
+// Security & Middleware
+app.use(helmet());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+// Custom Mongo Sanitize for Express 5 (req.query is read-only)
+app.use((req, res, next) => {
+  req.body = mongoSanitize.sanitize(req.body);
+  req.params = mongoSanitize.sanitize(req.params);
+
+  if (req.query) {
+    const sanitizedQuery = mongoSanitize.sanitize({ ...req.query });
+    // Modifying req.query in place since we can't reassign it
+    for (const key in req.query) {
+      delete req.query[key];
+    }
+    for (const key in sanitizedQuery) {
+      req.query[key] = sanitizedQuery[key];
+    }
+  }
+  next();
+});
+app.use(morgan("dev"));
 app.use(cors({
   origin: process.env.FRONTEND_URL || "http://localhost:5173",
   credentials: true,
 }));
-app.use(morgan("dev"));
 
-// Static uploads
+// Rate Limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: "Too many requests, please try again later."
+});
+app.use("/api", limiter);
+
+// Static Asset Serving
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
 // API Routes
@@ -38,29 +70,17 @@ app.use("/api/jobs", jobRoutes);
 app.use("/api/applications", applicationRoutes);
 app.use("/api/admin", adminRoutes);
 
-// Debug route to check if auth routes are loaded
-app.get("/api/auth/test", (req, res) => {
-  res.json({ message: "Auth routes are working" });
-});
+// Health Check
+app.get("/test", (req, res) => res.send("Backend working fine!"));
 
-// ✅ Add this test route *above* fallback
-app.get("/test", (req, res) => {
-  console.log("✅ /test route hit");
-  res.send("Backend working fine!");
-});
-
-// ⚠️ Fallback route should always be last
+// 404 Handler
 app.use((req, res) => {
-  console.log(`⚠️ 404 - Route not found: ${req.method} ${req.path}`);
-  res.status(404).json({ message: "Route not found", path: req.path, method: req.method });
+  res.status(404).json({ message: "Route not found", path: req.path });
 });
 
-const PORT = process.env.PORT || 5000;
-
-// Export app for testing/importing if needed
 export default app;
 
-// Start the server (will be called when imported by index.js)
-app.listen(PORT, () =>
-  console.log(`🚀 Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`)
-);
+// Server Start
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+}

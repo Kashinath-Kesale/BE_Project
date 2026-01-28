@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import api from "../services/api.js";
+// eslint-disable-next-line no-unused-vars
 import { motion } from "framer-motion";
 
 export default function ProfileCard() {
@@ -25,9 +26,9 @@ export default function ProfileCard() {
         setError("Failed to load profile");
       } else {
         // For 404, set empty profile with 0% completion
-        setProfile({ 
-          candidate: { userId: { name: localStorage.getItem("name") || "User" } }, 
-          profileCompletion: 0 
+        setProfile({
+          candidate: { userId: { name: localStorage.getItem("name") || "User" } },
+          profileCompletion: 0
         });
       }
     }
@@ -43,14 +44,14 @@ export default function ProfileCard() {
     const handleFocus = () => {
       fetchProfile();
     };
-    
+
     const handleProfileUpdate = () => {
       fetchProfile();
     };
-    
+
     window.addEventListener('focus', handleFocus);
     window.addEventListener('profileUpdated', handleProfileUpdate);
-    
+
     return () => {
       window.removeEventListener('focus', handleFocus);
       window.removeEventListener('profileUpdated', handleProfileUpdate);
@@ -61,7 +62,13 @@ export default function ProfileCard() {
   const userName = candidate?.userId?.name || candidate?.name || "User";
   const initials =
     userName && userName.trim().length > 0
-      ? userName.trim()[0].toUpperCase()
+      ? userName
+        .split(" ")
+        .filter(Boolean)
+        .map((n) => n[0])
+        .join("")
+        .slice(0, 2)
+        .toUpperCase()
       : "U";
   const hasAvatar = candidate?.avatarUrl;
   const completion = profile?.profileCompletion ?? 0;

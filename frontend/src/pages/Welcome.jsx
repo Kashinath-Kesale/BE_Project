@@ -1,45 +1,40 @@
 import React from "react";
 
-// In a real app, you would use Link from react-router-dom.
-// For this standalone example, we'll use regular <a> tags.
 const Link = ({ to, children, className }) => <a href={to} className={className}>{children}</a>;
 
-// --- SVG Icons for Feature Cards ---
-
+// Icons
 const AiIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-7 h-7 text-white">
-        <path d="M12 8V4H8" /><rect width="16" height="12" x="4" y="8" rx="2" />
-        <path d="M2 14h2" /><path d="M20 14h2" /><path d="M15 13v2" /><path d="M9 13v2" />
-    </svg>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-7 h-7 text-white">
+    <path d="M12 8V4H8" /><rect width="16" height="12" x="4" y="8" rx="2" />
+    <path d="M2 14h2" /><path d="M20 14h2" /><path d="M15 13v2" /><path d="M9 13v2" />
+  </svg>
 );
 
 const ApplicationIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-7 h-7 text-white">
-        <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
-        <path d="M14 2v4a2 2 0 0 0 2 2h4" /><path d="m10 11-2 2 2 2" /><path d="m14 11 2 2-2 2" />
-    </svg>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-7 h-7 text-white">
+    <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
+    <path d="M14 2v4a2 2 0 0 0 2 2h4" /><path d="m10 11-2 2 2 2" /><path d="m14 11 2 2-2 2" />
+  </svg>
 );
 
 const RecruiterIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-7 h-7 text-white">
-        <circle cx="12" cy="12" r="10" /><circle cx="12" cy="10" r="3" />
-        <path d="M7 20.662V19a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1.662" />
-    </svg>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-7 h-7 text-white">
+    <circle cx="12" cy="12" r="10" /><circle cx="12" cy="10" r="3" />
+    <path d="M7 20.662V19a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1.662" />
+  </svg>
 );
 
 const InsightsIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-7 h-7 text-white">
-        <path d="M12 20V10" /><path d="M18 20V4" /><path d="M6 20V16" />
-    </svg>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-7 h-7 text-white">
+    <path d="M12 20V10" /><path d="M18 20V4" /><path d="M6 20V16" />
+  </svg>
 );
-
-// --- Main Welcome Component ---
 
 export default function Welcome() {
   return (
     <div className="min-h-screen bg-white text-gray-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
+
         {/* Header */}
         <header className="py-5 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -61,7 +56,7 @@ export default function Welcome() {
 
         {/* Main Content */}
         <main className="pt-20 pb-24 grid grid-cols-1 lg:grid-cols-2 gap-x-12 gap-y-16 items-center">
-          
+
           {/* Hero Text Content */}
           <div className="text-center lg:text-left">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-gray-900 leading-tight tracking-tighter">

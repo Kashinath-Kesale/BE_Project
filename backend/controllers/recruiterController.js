@@ -2,7 +2,7 @@ import Recruiter from "../models/Recruiter.js";
 import Job from "../models/Job.js";
 import Application from "../models/Application.js";
 
-// ✅ Update or create recruiter profile
+// Update recruiter profile
 export const updateRecruiterProfile = async (req, res) => {
   try {
     let recruiter = await Recruiter.findOne({ userId: req.user._id });
@@ -39,7 +39,7 @@ export const updateRecruiterProfile = async (req, res) => {
   }
 };
 
-// ✅ Get recruiter profile
+// Get recruiter profile
 export const getRecruiterProfile = async (req, res) => {
   try {
     const recruiter = await Recruiter.findOne({ userId: req.user._id });
@@ -52,7 +52,7 @@ export const getRecruiterProfile = async (req, res) => {
   }
 };
 
-// ✅ Get all jobs posted by logged-in recruiter
+// Get jobs posted by recruiter
 export const getRecruiterJobs = async (req, res) => {
   try {
     const recruiter = await Recruiter.findOne({ userId: req.user._id });
@@ -67,7 +67,7 @@ export const getRecruiterJobs = async (req, res) => {
   }
 };
 
-// ✅ Get recruiter stats
+// Get recruiter stats
 export const getRecruiterStats = async (req, res) => {
   try {
     const recruiter = await Recruiter.findOne({ userId: req.user._id });
@@ -88,7 +88,7 @@ export const getRecruiterStats = async (req, res) => {
   }
 };
 
-// ✅ Get recent applications for recruiter
+// Get recent applications
 export const getRecentApplications = async (req, res) => {
   try {
     const recruiter = await Recruiter.findOne({ userId: req.user._id });

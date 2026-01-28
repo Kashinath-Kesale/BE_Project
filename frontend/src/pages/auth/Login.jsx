@@ -42,7 +42,7 @@ const LockIcon = ({ className }) => (
 export default function Login() {
   const navigate = useNavigate();
 
-  // 🧹 Clean up any stale sessions on mount
+  // Cleanup session on mount
   useEffect(() => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
@@ -162,7 +162,6 @@ export default function Login() {
               </div>
             )}
 
-            {/* Email Input */}
             <div className="mb-5">
               <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
               <div className="relative">
@@ -178,7 +177,6 @@ export default function Login() {
               </div>
             </div>
 
-            {/* Password Input */}
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
               <div className="relative">

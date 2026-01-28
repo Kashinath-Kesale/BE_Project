@@ -53,7 +53,7 @@ export default function App() {
       <Route
         path="/candidate" // Using a specific path for the candidate section
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={['candidate']}>
             <DashboardLayout />
           </ProtectedRoute>
         }
@@ -70,7 +70,7 @@ export default function App() {
       <Route
         path="/recruiter"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={['recruiter']}>
             <RecruiterDashboardLayout />
           </ProtectedRoute>
         }
@@ -84,7 +84,7 @@ export default function App() {
         <Route path="applicants/:jobId" element={<Applicants />} /> {/* For filtering by job */}
         <Route path="settings" element={<RecruiterSettings />} />
       </Route>
-      
+
       {/* Optional: Add a catch-all 404 route */}
       <Route path="*" element={<div className="p-8 text-center"><h2>404: Page Not Found</h2></div>} />
     </Routes>

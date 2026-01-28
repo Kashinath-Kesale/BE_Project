@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import api from "../services/api";
 
-export default function SkillGap(){
+export default function SkillGap() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [candidateKeywords, setCandidateKeywords] = useState([]);
@@ -18,7 +18,7 @@ export default function SkillGap(){
         if (!mounted) return;
         setCandidateKeywords(profileRes.data?.candidate?.keywords || []);
         setJobs(jobsRes.data || []);
-      } catch (e) {
+      } catch {
         if (mounted) setError("Failed to load suggestions");
       } finally {
         if (mounted) setLoading(false);
@@ -43,7 +43,7 @@ export default function SkillGap(){
     }
     // sort by frequency desc and take top 9
     return Array.from(freq.entries())
-      .sort((a,b) => b[1]-a[1])
+      .sort((a, b) => b[1] - a[1])
       .slice(0, 9)
       .map(([k]) => k);
   }, [candidateKeywords, jobs]);

@@ -1,14 +1,14 @@
 // RecruiterDashboardLayout.jsx
 
 import { useState } from "react";
-import { Outlet, useLocation } from "react-router-dom";
+import { Outlet } from "react-router-dom";
 import RecruiterSidebar from "./RecruiterSidebar.jsx";
 import Navbar from "./Navbar.jsx";
 import { LayoutGrid, Users, Briefcase, PlusSquare, User, Settings } from "lucide-react";
 
 const RecruiterDashboardLayout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const location = useLocation();
+  // const location = useLocation();
 
   // 1. DEFINE the links array here
   const recruiterLinks = [
@@ -21,8 +21,8 @@ const RecruiterDashboardLayout = () => {
   ];
 
   // 2. FIND the current page title (same logic as before)
-  const currentPage = recruiterLinks.find(link => link.path === location.pathname);
-  const pageTitle = currentPage ? currentPage.name : "";
+  // const currentPage = recruiterLinks.find(link => link.path === location.pathname);
+  // const pageTitle = currentPage ? currentPage.name : "";
 
   return (
     <div className="flex bg-gray-50/50 min-h-screen">

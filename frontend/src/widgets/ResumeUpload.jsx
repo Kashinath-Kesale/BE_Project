@@ -24,6 +24,15 @@ export default function ResumeUpload() {
 
   const onUpload = async () => {
     if (!file || uploading) return;
+
+    // Validate file type
+    const validExtensions = ['.pdf', '.doc', '.docx', '.txt'];
+    const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+    if (!validExtensions.includes(fileExtension)) {
+      setStatus("Invalid file type. Please upload PDF, DOC, DOCX, or TXT.");
+      return;
+    }
+
     setUploading(true);
     setStatus("Uploading...");
     const fd = new FormData();
@@ -38,7 +47,7 @@ export default function ResumeUpload() {
         setCurrentResume(res.data.candidate.resumeUrl);
       }
       setFile(null); // Clear file input
-      
+
       // Trigger profile refresh event for ProfileCard
       window.dispatchEvent(new CustomEvent('profileUpdated'));
     } catch (e) {
@@ -57,7 +66,7 @@ export default function ResumeUpload() {
         </svg>
         Update Your Resume
       </h3>
-      
+
       {/* Show current resume if exists */}
       {currentResume && (
         <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
@@ -75,15 +84,15 @@ export default function ResumeUpload() {
 
       <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
         <p className="text-sm text-gray-600 mb-2">Drag & drop your file here or</p>
-        <input 
-          type="file" 
-          id="resume-upload" 
-          className="hidden" 
+        <input
+          type="file"
+          id="resume-upload"
+          className="hidden"
           accept=".pdf,.doc,.docx,.txt"
-          onChange={(e) => setFile(e.target.files[0])} 
+          onChange={(e) => setFile(e.target.files[0])}
         />
-        <label 
-          htmlFor="resume-upload" 
+        <label
+          htmlFor="resume-upload"
           className="inline-block px-4 py-2 text-sm font-semibold text-white bg-gray-800 rounded-lg hover:bg-gray-900 transition-colors cursor-pointer"
         >
           Choose File
@@ -93,9 +102,9 @@ export default function ResumeUpload() {
         )}
       </div>
       <div className="mt-4 flex items-center justify-between">
-        <button 
-          onClick={onUpload} 
-          disabled={!file || uploading} 
+        <button
+          onClick={onUpload}
+          disabled={!file || uploading}
           className="px-4 py-2 text-sm font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
         >
           {uploading ? "Uploading..." : "Upload"}

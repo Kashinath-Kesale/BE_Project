@@ -1,16 +1,16 @@
-import Link from "mongoose"; // Mistake here? No wait, mongoose import required for mongoose.model
+import Link from "mongoose";
 import mongoose from "mongoose";
 import Application from "../models/Application.js";
 import Job from "../models/Job.js";
 import Recruiter from "../models/Recruiter.js";
 import Candidate from "../models/Candidate.js";
 
-// ✅ Candidate applies to a job
+// Apply to job
 export const applyToJob = async (req, res) => {
   try {
     const { jobId, resumeUrl } = req.body;
 
-    // prevent duplicate application
+    // Check duplicate
     const existing = await Application.findOne({
       jobId,
       candidateId: req.user._id,
@@ -31,18 +31,18 @@ export const applyToJob = async (req, res) => {
   }
 };
 
-// ✅ Candidate views their applications
+// Get candidate's applications
 export const getMyApplications = async (req, res) => {
   try {
     const applications = await Application.find({ candidateId: req.user._id })
-      .populate("jobId", "title companyName location");
+      .populate("jobId", "title companyName location description requirements type");
     res.json(applications);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-// ✅ Recruiter views applications for their jobs (All Applications)
+// Get all applications for recruiter
 export const getRecruiterApplications = async (req, res) => {
   try {
     const recruiter = await Recruiter.findOne({ userId: req.user._id });
@@ -57,11 +57,8 @@ export const getRecruiterApplications = async (req, res) => {
       .populate("jobId", "title")
       .lean();
 
-    // Fetch extra candidate details (avatar, resume from profile if not in app)
-    // We need to map over applications and find the candidate profile
+    // Populate extra details
     const enhancedApplications = await Promise.all(applications.map(async (app) => {
-      // Find candidate profile for this user
-      // app.candidateId is the User object now due to populate
       if (!app.candidateId) return app;
 
       // map Candidate model
@@ -91,7 +88,7 @@ export const getRecruiterApplications = async (req, res) => {
   }
 };
 
-// ✅ Recruiter views applications for a specific job
+// Get applications for specific job
 export const getJobApplications = async (req, res) => {
   try {
     const { jobId } = req.params;
@@ -136,7 +133,7 @@ export const getJobApplications = async (req, res) => {
   }
 };
 
-// ✅ Recruiter updates application status (shortlist/reject/hire)
+// Update status
 export const updateApplicationStatus = async (req, res) => {
   try {
     const { status } = req.body;
@@ -151,7 +148,7 @@ export const updateApplicationStatus = async (req, res) => {
   }
 };
 
-// ✅ Candidate withdraws their application
+// Withdraw application
 export const withdrawApplication = async (req, res) => {
   try {
     const application = await Application.findById(req.params.id);
@@ -160,6 +157,11 @@ export const withdrawApplication = async (req, res) => {
     // Check if the application belongs to the current user
     if (application.candidateId.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: "You can only withdraw your own applications" });
+    }
+
+    // Restriction: Cannot withdraw if already processed
+    if (application.status !== "applied") {
+      return res.status(400).json({ message: `Cannot withdraw application that is ${application.status}` });
     }
 
     await Application.findByIdAndDelete(req.params.id);

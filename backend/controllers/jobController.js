@@ -1,7 +1,7 @@
 import Job from "../models/Job.js";
 import Recruiter from "../models/Recruiter.js";
 
-// ✅ Create job (approved or pending recruiters)
+// Create new job
 export const createJob = async (req, res) => {
   try {
     const recruiter = await Recruiter.findOne({ userId: req.user._id });
@@ -28,7 +28,7 @@ export const createJob = async (req, res) => {
   }
 };
 
-// ✅ Public list of jobs
+// List all jobs
 export const listJobs = async (req, res) => {
   try {
     const jobs = await Job.find().sort({ createdAt: -1 });
@@ -38,25 +38,22 @@ export const listJobs = async (req, res) => {
   }
 };
 
-// ✅ List my jobs (protected)
+// List recruiter's jobs
 export const listMyJobs = async (req, res) => {
   try {
-    console.log("listMyJobs called for user:", req.user._id);
     const recruiter = await Recruiter.findOne({ userId: req.user._id });
-    console.log("Recruiter found:", recruiter);
     if (!recruiter) {
       return res.status(404).json({ message: "Recruiter profile not found" });
     }
 
     const jobs = await Job.find({ recruiterId: recruiter._id }).sort({ createdAt: -1 });
-    console.log("Jobs found:", jobs.length);
     res.json(jobs);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-// ✅ Get single job (details page)
+// Get single job details
 export const getJobById = async (req, res) => {
   try {
     const job = await Job.findById(req.params.id);
@@ -67,7 +64,7 @@ export const getJobById = async (req, res) => {
   }
 };
 
-// ✅ Update job (only job creator)
+// Update job
 export const updateJob = async (req, res) => {
   try {
     const job = await Job.findById(req.params.id);
@@ -90,7 +87,7 @@ export const updateJob = async (req, res) => {
   }
 };
 
-// ✅ Delete job (only job creator)
+// Delete job
 export const deleteJob = async (req, res) => {
   try {
     const job = await Job.findById(req.params.id);
@@ -100,7 +97,7 @@ export const deleteJob = async (req, res) => {
       return res.status(403).json({ message: "Not authorized" });
     }
 
-    await job.remove();
+    await job.deleteOne();
     res.json({ message: "Job removed successfully" });
   } catch (error) {
     res.status(500).json({ message: error.message });

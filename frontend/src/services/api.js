@@ -6,7 +6,7 @@ const api = axios.create({
   withCredentials: true,
 });
 
-// Attach Authorization header from localStorage token for every request (if present).
+// Request interceptor: Attach token
 api.interceptors.request.use((config) => {
   try {
     const token = localStorage.getItem("token");
@@ -15,29 +15,25 @@ api.interceptors.request.use((config) => {
       config.headers.Authorization = `Bearer ${token}`;
     }
   } catch {
-    // ignore (e.g., SSR or blocked access)
+    // Ignore
   }
   return config;
 });
 
-// Response interceptor to handle 401s globally
+// Response interceptor: Handle 401/403
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response) {
       if (error.response.status === 401) {
-        // Clear session data
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
+        localStorage.clear();
 
-        // Redirect to login if not already there
         if (window.location.pathname !== "/login") {
           window.location.href = "/login";
         }
       } else if (error.response.status === 403) {
-        // Access Denied
-        console.warn("Access Denied: You do not have permission to view this page.");
-        window.location.href = "/login"; // Provide a way to switch accounts
+        console.warn("Access Denied");
+        window.location.href = "/login";
       }
     }
     return Promise.reject(error);
