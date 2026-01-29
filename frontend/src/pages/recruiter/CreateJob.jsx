@@ -94,6 +94,13 @@ export default function CreateJob() {
     description: "",
     location: "",
     minExperience: "",
+    criteria: {
+      minTenthPercent: "",
+      minTwelfthPercent: "",
+      minCgpa: "",
+      eligibleBranches: [],
+      gender: "Any"
+    }
   });
   const [skills, setSkills] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -184,6 +191,65 @@ export default function CreateJob() {
             value={job.minExperience}
             onChange={handleChange}
           />
+
+          <div className="p-5 bg-gray-50 border border-gray-200 rounded-xl space-y-4">
+            <h3 className="font-bold text-gray-800">Eligibility Criteria</h3>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <FormInput
+                id="minTenth"
+                label="Min Class X %"
+                type="number"
+                value={job.criteria?.minTenthPercent || ""}
+                onChange={(e) => setJob({ ...job, criteria: { ...job.criteria, minTenthPercent: e.target.value } })}
+              />
+              <FormInput
+                id="minTwelfth"
+                label="Min Class XII %"
+                type="number"
+                value={job.criteria?.minTwelfthPercent || ""}
+                onChange={(e) => setJob({ ...job, criteria: { ...job.criteria, minTwelfthPercent: e.target.value } })}
+              />
+              <FormInput
+                id="minCgpa"
+                label="Min CGPA"
+                type="number"
+                step="0.1"
+                value={job.criteria?.minCgpa || ""}
+                onChange={(e) => setJob({ ...job, criteria: { ...job.criteria, minCgpa: e.target.value } })}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Eligible Branches (comma separated)</label>
+                <input
+                  className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  placeholder="CS, IT, ENTC"
+                  value={job.criteria?.eligibleBranches?.join(", ") || ""}
+                  onChange={(e) => setJob({
+                    ...job,
+                    criteria: {
+                      ...job.criteria,
+                      eligibleBranches: e.target.value.split(",").map(s => s.trim()).filter(Boolean)
+                    }
+                  })}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Gender Preference</label>
+                <select
+                  className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  value={job.criteria?.gender || "Any"}
+                  onChange={(e) => setJob({ ...job, criteria: { ...job.criteria, gender: e.target.value } })}
+                >
+                  <option value="Any">Any</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                </select>
+              </div>
+            </div>
+          </div>
 
           {error && (
             <div className="bg-red-100 text-red-800 p-3 rounded">

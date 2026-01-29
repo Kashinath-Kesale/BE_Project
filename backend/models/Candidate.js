@@ -6,11 +6,17 @@ const candidateSchema = new mongoose.Schema(
     phone: { type: String, required: true },
     rollNo: { type: String, required: true },
     branch: { type: String, required: true },
+    location: { type: String }, // For matching logic
     avatarUrl: { type: String },
     education: {
-      year: { type: String },
-      cgpa: { type: String },
+      tenth: { percentage: Number, year: Number },
+      twelfth: { percentage: Number, year: Number },
+      btech: { percentage: Number, year: Number, cgpa: String }, // Renaming/Structuring existing fields
     },
+    skills: [{ type: String }],
+    gender: { type: String, enum: ["Male", "Female", "Other"] },
+    githubProfile: { type: String },
+    linkedinProfile: { type: String },
     resumeUrl: { type: String },
     parsedText: { type: String },     // full extracted text from resume
     keywords: [{ type: String }],     // keywords extracted from resume

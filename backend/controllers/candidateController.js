@@ -5,7 +5,7 @@ import path from "path";
 // Create or Update Candidate Profile
 export const updateCandidateProfile = async (req, res) => {
   try {
-    const { phone, rollNo, branch, education, resumeUrl } = req.body;
+    const { phone, rollNo, branch, education, resumeUrl, gender, skills, githubProfile, linkedinProfile, location } = req.body;
 
     let candidate = await Candidate.findOne({ userId: req.user._id });
 
@@ -13,8 +13,13 @@ export const updateCandidateProfile = async (req, res) => {
       candidate.phone = phone || candidate.phone;
       candidate.rollNo = rollNo || candidate.rollNo;
       candidate.branch = branch || candidate.branch;
+      candidate.location = location || candidate.location;
       candidate.education = education || candidate.education;
       candidate.resumeUrl = resumeUrl || candidate.resumeUrl;
+      candidate.gender = gender || candidate.gender;
+      candidate.skills = skills || candidate.skills;
+      candidate.githubProfile = githubProfile || candidate.githubProfile;
+      candidate.linkedinProfile = linkedinProfile || candidate.linkedinProfile;
       await candidate.save();
     } else {
       candidate = await Candidate.create({
@@ -22,8 +27,13 @@ export const updateCandidateProfile = async (req, res) => {
         phone,
         rollNo,
         branch,
+        location,
         education,
         resumeUrl,
+        gender,
+        skills,
+        githubProfile,
+        linkedinProfile
       });
     }
 

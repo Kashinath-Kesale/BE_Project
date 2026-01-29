@@ -82,7 +82,7 @@ const JobCard = ({ job, pct, applying, onApply, onViewDetails, isApplied }) => (
                     {job.location && <p className="text-sm text-gray-500 flex items-center gap-1 shrink-0"><MapPinIcon className="h-4 w-4" /> <span className="line-clamp-1">{job.location}</span></p>}
                 </div>
             </div>
-            <div className="text-center flex-shrink-0 bg-green-50 px-2 py-1 rounded-lg">
+            <div className="text-center flex-shrink-0 bg-green-50 px-2 py-1 rounded-lg" title="Based on Skills, Marks, Location & Preferences">
                 <p className="text-xl font-bold text-green-600">{pct}%</p>
                 <p className="text-[10px] text-gray-500 font-medium uppercase tracking-wide">Match</p>
             </div>
@@ -186,10 +186,12 @@ export default function Jobs() {
             setJobs(fetchedJobs);
 
             // Create a Set of applied job IDs for efficient lookup
-            const appliedIds = new Set((appsRes.data || []).map(app =>
+            // Create a Set of applied job IDs for efficient lookup
+            const appliedIds = new Set((appsRes.data || []).map(app => {
+                if (!app.jobId) return null; // Handle null jobId (deleted job)
                 // Handle populated object or direct ID
-                typeof app.jobId === 'object' ? app.jobId._id : app.jobId
-            ));
+                return typeof app.jobId === 'object' ? app.jobId._id : app.jobId;
+            }).filter(Boolean)); // Filter out nulls
             setAppliedJobIds(appliedIds);
 
             // Check for deep link via state

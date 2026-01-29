@@ -47,7 +47,15 @@ export default function Profile() {
         phone: "",
         rollNo: "",
         branch: "",
-        education: { year: "", cgpa: "" },
+        gender: "Male",
+        education: {
+            tenth: { percentage: "", year: "" },
+            twelfth: { percentage: "", year: "" },
+            btech: { percentage: "", year: "", cgpa: "" }
+        },
+        skills: [],
+        githubProfile: "",
+        linkedinProfile: ""
     });
     const [errors, setErrors] = useState({});
 
@@ -58,15 +66,31 @@ export default function Profile() {
             const profile = res.data.candidate;
             setCandidate(profile || null);
             setCompletion(res.data.profileCompletion || 0);
-            // Always populate form with profile data (even if empty)
+
             setForm({
                 phone: profile?.phone || "",
                 rollNo: profile?.rollNo || "",
                 branch: profile?.branch || "",
+                location: profile?.location || "",
+                gender: profile?.gender || "Male",
                 education: {
-                    year: profile?.education?.year || "",
-                    cgpa: profile?.education?.cgpa || "",
+                    tenth: {
+                        percentage: profile?.education?.tenth?.percentage || "",
+                        year: profile?.education?.tenth?.year || ""
+                    },
+                    twelfth: {
+                        percentage: profile?.education?.twelfth?.percentage || "",
+                        year: profile?.education?.twelfth?.year || ""
+                    },
+                    btech: {
+                        percentage: profile?.education?.btech?.percentage || "",
+                        year: profile?.education?.btech?.year || "", // Map old year to btech year if transitioning
+                        cgpa: profile?.education?.btech?.cgpa || profile?.education?.cgpa || "" // Fallback for old data
+                    },
                 },
+                skills: profile?.skills || [],
+                githubProfile: profile?.githubProfile || "",
+                linkedinProfile: profile?.linkedinProfile || ""
             });
         } catch (err) {
             console.error(err);
@@ -85,58 +109,71 @@ export default function Profile() {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        if (name === "year" || name === "cgpa") {
-            setForm((prev) => ({ ...prev, education: { ...prev.education, [name]: value } }));
-        } else {
-            setForm((prev) => ({ ...prev, [name]: value }));
+
+        if (name.includes(".")) {
+            const [parent, child] = name.split(".");
+            // Handle btech/year/cgpa or tenth/percentage etc.
+            // Simplified for the structure education.btech.year etc.
+            if (parent === "education") {
+                // name="education.tenth.year" -> need deeper split if we use that convention
+                // easier: use specific handlers or checks
+                // Let's rely on specific names like "tenth.year" in inputs and process here
+                // But wait, name in input is e.g. "tenthYear"? NO, let's use specialized logic below
+            }
         }
-        // Clear error for this field when user types
-        if (errors[name]) {
-            setErrors((prev) => ({ ...prev, [name]: "" }));
+    };
+
+    // Specialized change handler for nested education fields
+    const handleEducationChange = (level, field, value) => {
+        setForm(prev => ({
+            ...prev,
+            education: {
+                ...prev.education,
+                [level]: {
+                    ...prev.education[level],
+                    [field]: value
+                }
+            }
+        }));
+    };
+
+    const handleGenericChange = (e) => {
+        const { name, value } = e.target;
+        setForm(prev => ({ ...prev, [name]: value }));
+    };
+
+    // Skill handlers
+    const addSkill = (e) => {
+        if (e.key === "Enter" || e.key === ",") {
+            e.preventDefault();
+            const skill = e.target.value.trim();
+            if (skill && !form.skills.includes(skill)) {
+                setForm(prev => ({ ...prev, skills: [...prev.skills, skill] }));
+            }
+            e.target.value = "";
         }
+    };
+    const removeSkill = (skillToRemove) => {
+        setForm(prev => ({ ...prev, skills: prev.skills.filter(s => s !== skillToRemove) }));
     };
 
     const validateForm = () => {
         const newErrors = {};
 
-        // Phone validation (10 digits, optional formatting)
-        if (form.phone && !/^[\d\s\-()]+$/.test(form.phone)) {
-            newErrors.phone = "Phone number should contain only digits, spaces, hyphens, or parentheses";
-        }
-        if (form.phone && form.phone.replace(/\D/g, '').length < 10) {
-            newErrors.phone = "Phone number should have at least 10 digits";
+        if (form.phone && !/^[\d\s\-()]+$/.test(form.phone)) newErrors.phone = "Invalid phone format";
+        if (form.phone && form.phone.replace(/\D/g, '').length < 10) newErrors.phone = "Phone must be 10 digits";
+
+        // Basic year validations
+        const currentYear = new Date().getFullYear();
+        if (form.education.btech.year && (form.education.btech.year < 1990 || form.education.btech.year > currentYear + 10)) {
+            newErrors.btechYear = "Invalid passing year";
         }
 
-        // Roll number validation (not empty if provided)
-        if (form.rollNo && form.rollNo.trim().length < 3) {
-            newErrors.rollNo = "Roll number should be at least 3 characters";
-        }
-
-        // Branch validation
-        if (form.branch && form.branch.trim().length < 2) {
-            newErrors.branch = "Branch should be at least 2 characters";
-        }
-
-        // Year validation (should be 4 digits and reasonable range)
-        if (form.education.year) {
-            const year = parseInt(form.education.year);
-            const currentYear = new Date().getFullYear();
-            if (!/^\d{4}$/.test(form.education.year)) {
-                newErrors.year = "Year should be 4 digits (e.g., 2025)";
-            } else if (year < 1950 || year > currentYear + 10) {
-                newErrors.year = `Year should be between 1950 and ${currentYear + 10}`;
-            }
-        }
-
-        // CGPA validation (0-10 or 0-100 for percentage)
-        if (form.education.cgpa) {
-            const cgpa = parseFloat(form.education.cgpa);
-            if (isNaN(cgpa)) {
-                newErrors.cgpa = "CGPA should be a number";
-            } else if (cgpa < 0 || cgpa > 100) {
-                newErrors.cgpa = "CGPA should be between 0 and 10 (or 0-100 for percentage)";
-            }
-        }
+        // Percentage/CGPA validations (0-100 or 0-10)
+        ['tenth', 'twelfth', 'btech'].forEach(level => {
+            const val = form.education[level].percentage || form.education[level].cgpa;
+            if (val && (val < 0 || val > 100)) newErrors[level] = "Invalid Score/CGPA";
+        });
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
@@ -200,28 +237,57 @@ export default function Profile() {
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
-                                    <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
                                     <input
-                                        id="phone"
                                         name="phone"
                                         value={form.phone}
-                                        onChange={handleChange}
-                                        className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow ${errors.phone ? 'border-red-500' : 'border-gray-300'}`}
-                                        placeholder="e.g., 987-654-3210"
+                                        onChange={handleGenericChange}
+                                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                                        placeholder="987-654-3210"
                                     />
-                                    {errors.phone && <p className="text-xs text-red-600 mt-1">{errors.phone}</p>}
                                 </div>
                                 <div>
-                                    <label htmlFor="rollNo" className="block text-sm font-medium text-gray-700 mb-1">Roll No.</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Current Location</label>
                                     <input
-                                        id="rollNo"
-                                        name="rollNo"
-                                        value={form.rollNo}
-                                        onChange={handleChange}
-                                        className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow ${errors.rollNo ? 'border-red-500' : 'border-gray-300'}`}
-                                        placeholder="e.g., BE12345"
+                                        name="location"
+                                        value={form.location || ""}
+                                        onChange={handleGenericChange}
+                                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                                        placeholder="e.g. Pune"
                                     />
-                                    {errors.rollNo && <p className="text-xs text-red-600 mt-1">{errors.rollNo}</p>}
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Gender</label>
+                                    <select
+                                        name="gender"
+                                        value={form.gender}
+                                        onChange={handleGenericChange}
+                                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                                    >
+                                        <option value="Male">Male</option>
+                                        <option value="Female">Female</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">GitHub Profile</label>
+                                    <input
+                                        name="githubProfile"
+                                        value={form.githubProfile}
+                                        onChange={handleGenericChange}
+                                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                                        placeholder="https://github.com/..."
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">LinkedIn Profile</label>
+                                    <input
+                                        name="linkedinProfile"
+                                        value={form.linkedinProfile}
+                                        onChange={handleGenericChange}
+                                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                                        placeholder="https://linkedin.com/in/..."
+                                    />
                                 </div>
                             </div>
 
@@ -229,42 +295,112 @@ export default function Profile() {
                                 <h2 className="text-xl font-bold text-gray-800">Academic Details</h2>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                <div className="md:col-span-1">
-                                    <label htmlFor="branch" className="block text-sm font-medium text-gray-700 mb-1">Branch</label>
-                                    <input
-                                        id="branch"
-                                        name="branch"
-                                        value={form.branch}
-                                        onChange={handleChange}
-                                        className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow ${errors.branch ? 'border-red-500' : 'border-gray-300'}`}
-                                        placeholder="e.g., IT"
-                                    />
-                                    {errors.branch && <p className="text-xs text-red-600 mt-1">{errors.branch}</p>}
+                            <div className="space-y-6">
+                                {/* B.Tech */}
+                                <div className="p-4 bg-indigo-50 rounded-lg">
+                                    <h3 className="font-semibold text-indigo-900 mb-3">Undergraduate (B.Tech/BE)</h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div>
+                                            <label className="block text-xs font-medium text-gray-600 mb-1">Branch</label>
+                                            <input
+                                                name="branch"
+                                                value={form.branch}
+                                                onChange={handleGenericChange}
+                                                className="w-full p-2 border border-gray-300 rounded"
+                                                placeholder="CS/IT"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-medium text-gray-600 mb-1">Pass Year</label>
+                                            <input
+                                                value={form.education.btech.year}
+                                                onChange={(e) => handleEducationChange('btech', 'year', e.target.value)}
+                                                className="w-full p-2 border border-gray-300 rounded"
+                                                placeholder="2025"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-medium text-gray-600 mb-1">CGPA</label>
+                                            <input
+                                                value={form.education.btech.cgpa}
+                                                onChange={(e) => handleEducationChange('btech', 'cgpa', e.target.value)}
+                                                className="w-full p-2 border border-gray-300 rounded"
+                                                placeholder="9.0"
+                                            />
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className="md:col-span-1">
-                                    <label htmlFor="year" className="block text-sm font-medium text-gray-700 mb-1">Passing Year</label>
-                                    <input
-                                        id="year"
-                                        name="year"
-                                        value={form.education.year}
-                                        onChange={handleChange}
-                                        className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow ${errors.year ? 'border-red-500' : 'border-gray-300'}`}
-                                        placeholder="e.g., 2025"
-                                    />
-                                    {errors.year && <p className="text-xs text-red-600 mt-1">{errors.year}</p>}
+
+                                {/* 12th & 10th */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="p-4 bg-gray-50 rounded-lg">
+                                        <h3 className="font-semibold text-gray-900 mb-3">Class XII / Diploma</h3>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div>
+                                                <label className="block text-xs font-medium text-gray-600 mb-1">Percentage</label>
+                                                <input
+                                                    value={form.education.twelfth.percentage}
+                                                    onChange={(e) => handleEducationChange('twelfth', 'percentage', e.target.value)}
+                                                    className="w-full p-2 border border-gray-300 rounded"
+                                                    placeholder="85.5"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-medium text-gray-600 mb-1">Pass Year</label>
+                                                <input
+                                                    value={form.education.twelfth.year}
+                                                    onChange={(e) => handleEducationChange('twelfth', 'year', e.target.value)}
+                                                    className="w-full p-2 border border-gray-300 rounded"
+                                                    placeholder="2021"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="p-4 bg-gray-50 rounded-lg">
+                                        <h3 className="font-semibold text-gray-900 mb-3">Class X</h3>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div>
+                                                <label className="block text-xs font-medium text-gray-600 mb-1">Percentage</label>
+                                                <input
+                                                    value={form.education.tenth.percentage}
+                                                    onChange={(e) => handleEducationChange('tenth', 'percentage', e.target.value)}
+                                                    className="w-full p-2 border border-gray-300 rounded"
+                                                    placeholder="90.0"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-medium text-gray-600 mb-1">Pass Year</label>
+                                                <input
+                                                    value={form.education.tenth.year}
+                                                    onChange={(e) => handleEducationChange('tenth', 'year', e.target.value)}
+                                                    className="w-full p-2 border border-gray-300 rounded"
+                                                    placeholder="2019"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className="md:col-span-1">
-                                    <label htmlFor="cgpa" className="block text-sm font-medium text-gray-700 mb-1">CGPA / %</label>
+                            </div>
+
+                            <div className="mt-8 mb-6 pb-4 border-b border-gray-200">
+                                <h2 className="text-xl font-bold text-gray-800">Skills</h2>
+                            </div>
+
+                            <div className="mb-6">
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Technical Skills (Press Enter to add)</label>
+                                <div className="flex flex-wrap gap-2 p-3 border border-gray-300 rounded-lg bg-white focus-within:ring-2 focus-within:ring-indigo-500">
+                                    {form.skills && form.skills.map(skill => (
+                                        <span key={skill} className="bg-indigo-100 text-indigo-800 px-2.5 py-1 rounded-md text-sm font-medium flex items-center gap-1">
+                                            {skill}
+                                            <button type="button" onClick={() => removeSkill(skill)} className="text-indigo-600 hover:text-indigo-900">×</button>
+                                        </span>
+                                    ))}
                                     <input
-                                        id="cgpa"
-                                        name="cgpa"
-                                        value={form.education.cgpa}
-                                        onChange={handleChange}
-                                        className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow ${errors.cgpa ? 'border-red-500' : 'border-gray-300'}`}
-                                        placeholder="e.g., 9.0"
+                                        className="flex-grow outline-none bg-transparent min-w-[150px]"
+                                        placeholder="e.g. React, Node.js, Python"
+                                        onKeyDown={addSkill}
                                     />
-                                    {errors.cgpa && <p className="text-xs text-red-600 mt-1">{errors.cgpa}</p>}
                                 </div>
                             </div>
 

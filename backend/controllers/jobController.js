@@ -9,7 +9,7 @@ export const createJob = async (req, res) => {
       return res.status(403).json({ message: "Recruiter not approved to post jobs" });
     }
 
-    const { title, description, keywords = [], location, minExperience } = req.body;
+    const { title, description, keywords = [], location, minExperience, criteria } = req.body;
 
     const job = await Job.create({
       title,
@@ -19,6 +19,7 @@ export const createJob = async (req, res) => {
       keywords,
       location,
       minExperience,
+      criteria,
       createdBy: req.user._id,
     });
 
@@ -79,6 +80,9 @@ export const updateJob = async (req, res) => {
     job.keywords = req.body.keywords || job.keywords;
     job.location = req.body.location || job.location;
     job.minExperience = req.body.minExperience || job.minExperience;
+    if (req.body.criteria) {
+      job.criteria = { ...job.criteria, ...req.body.criteria };
+    }
 
     await job.save();
     res.json(job);

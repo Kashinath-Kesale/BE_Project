@@ -36,7 +36,11 @@ export const getMyApplications = async (req, res) => {
   try {
     const applications = await Application.find({ candidateId: req.user._id })
       .populate("jobId", "title companyName location description requirements type");
-    res.json(applications);
+
+    // Filter out applications where the job has been deleted
+    const validApplications = applications.filter(app => app.jobId);
+
+    res.json(validApplications);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
