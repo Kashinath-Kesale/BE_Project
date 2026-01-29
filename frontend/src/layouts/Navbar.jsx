@@ -132,6 +132,18 @@ const Navbar = ({ toggleSidebar, role }) => {
                 </>
               )}
 
+              {role === "admin" && (
+                <>
+                  <Link
+                    to="/admin/dashboard"
+                    className="block px-4 py-2 hover:bg-gray-100"
+                    onClick={() => setDropdownOpen(false)}
+                  >
+                    Dashboard
+                  </Link>
+                </>
+              )}
+
               <button
                 className="w-full text-left px-4 py-2 hover:bg-gray-100 text-red-500"
                 onClick={onLogout}

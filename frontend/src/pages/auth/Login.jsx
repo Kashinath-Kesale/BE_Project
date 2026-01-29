@@ -39,6 +39,14 @@ const LockIcon = ({ className }) => (
   </svg>
 );
 
+const AdminIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none"
+    stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+    className="w-6 h-6 text-indigo-500">
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+  </svg>
+);
+
 export default function Login() {
   const navigate = useNavigate();
 
@@ -87,6 +95,11 @@ export default function Login() {
         return;
       }
 
+      if (userRole === "admin") {
+        navigate("/admin/dashboard", { replace: true });
+        return;
+      }
+
       navigate("/", { replace: true });
     } catch (err) {
       if (err?.response?.status === 403) {
@@ -131,28 +144,39 @@ export default function Login() {
             <p className="text-gray-500 mb-8">Select your role and enter your details.</p>
 
             {/* Role Switcher */}
-            <div className="grid grid-cols-2 gap-4 mb-6">
+            <div className="grid grid-cols-3 gap-2 mb-6">
               <button
                 type="button"
                 onClick={() => setRole("candidate")}
-                className={`flex items-center justify-center gap-3 p-4 rounded-xl border-2 transition-all duration-300 ${role === "candidate"
+                className={`flex flex-col sm:flex-row items-center justify-center gap-2 p-3 rounded-xl border-2 transition-all duration-300 ${role === "candidate"
                   ? "border-indigo-500 bg-indigo-50"
                   : "border-gray-200 bg-white hover:border-gray-300"
                   }`}
               >
                 <UserIcon />
-                <span className="font-semibold text-gray-800">Candidate</span>
+                <span className="font-semibold text-gray-800 text-sm">Candidate</span>
               </button>
               <button
                 type="button"
                 onClick={() => setRole("recruiter")}
-                className={`flex items-center justify-center gap-3 p-4 rounded-xl border-2 transition-all duration-300 ${role === "recruiter"
+                className={`flex flex-col sm:flex-row items-center justify-center gap-2 p-3 rounded-xl border-2 transition-all duration-300 ${role === "recruiter"
                   ? "border-indigo-500 bg-indigo-50"
                   : "border-gray-200 bg-white hover:border-gray-300"
                   }`}
               >
                 <BriefcaseIcon />
-                <span className="font-semibold text-gray-800">Recruiter</span>
+                <span className="font-semibold text-gray-800 text-sm">Recruiter</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setRole("admin")}
+                className={`flex flex-col sm:flex-row items-center justify-center gap-2 p-3 rounded-xl border-2 transition-all duration-300 ${role === "admin"
+                  ? "border-indigo-500 bg-indigo-50"
+                  : "border-gray-200 bg-white hover:border-gray-300"
+                  }`}
+              >
+                <AdminIcon />
+                <span className="font-semibold text-gray-800 text-sm">Admin</span>
               </button>
             </div>
 

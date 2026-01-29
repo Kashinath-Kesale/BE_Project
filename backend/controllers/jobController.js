@@ -5,7 +5,7 @@ import Recruiter from "../models/Recruiter.js";
 export const createJob = async (req, res) => {
   try {
     const recruiter = await Recruiter.findOne({ userId: req.user._id });
-    if (!recruiter || (recruiter.status !== "approved" && recruiter.status !== "pending")) {
+    if (!recruiter || recruiter.status !== "approved") {
       return res.status(403).json({ message: "Recruiter not approved to post jobs" });
     }
 

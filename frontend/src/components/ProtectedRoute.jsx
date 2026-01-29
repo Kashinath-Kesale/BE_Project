@@ -11,6 +11,7 @@ export default function ProtectedRoute({ children, allowedRoles }) {
     // Redirect to the appropriate dashboard if role doesn't match
     if (userRole === "recruiter") return <Navigate to="/recruiter/dashboard" replace />;
     if (userRole === "candidate") return <Navigate to="/candidate/dashboard" replace />;
+    if (userRole === "admin") return <Navigate to="/admin/dashboard" replace />;
     return <Navigate to="/" replace />;
   }
 

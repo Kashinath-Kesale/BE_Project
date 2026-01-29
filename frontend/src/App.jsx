@@ -2,6 +2,7 @@ import React from "react";
 import { Routes, Route } from "react-router-dom";
 import DashboardLayout from "./layouts/DashboardLayout";
 import RecruiterDashboardLayout from "./layouts/RecruiterDashboardLayout";
+import AdminDashboardLayout from "./layouts/AdminDashboardLayout";
 
 // --- Page Imports ---
 // (Assuming these files exist at the specified paths based on your project structure)
@@ -30,6 +31,7 @@ import RecruiterJobs from "./pages/recruiter/MyJobs";
 import CreateJob from "./pages/recruiter/CreateJob";
 import Applicants from "./pages/recruiter/Applicants";
 import RecruiterSettings from "./pages/recruiter/Settings";
+import AdminDashboard from "./pages/admin/Dashboard";
 
 // --- Utility Components ---
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -83,6 +85,19 @@ export default function App() {
         <Route path="applicants" element={<Applicants />} />
         <Route path="applicants/:jobId" element={<Applicants />} /> {/* For filtering by job */}
         <Route path="settings" element={<RecruiterSettings />} />
+      </Route>
+
+      {/* --- Admin Dashboard Routes --- */}
+      <Route
+        path="/admin"
+        element={
+          <ProtectedRoute allowedRoles={['admin']}>
+            <AdminDashboardLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<AdminDashboard />} />
+        <Route path="dashboard" element={<AdminDashboard />} />
       </Route>
 
       {/* Optional: Add a catch-all 404 route */}

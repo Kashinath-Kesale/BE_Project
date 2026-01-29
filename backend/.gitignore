@@ -16,3 +16,8 @@ logs/
 Thumbs.db
 .vscode/
 .idea/
+
+# Tools with secrets or local scripts
+tools/seedAdmin.js
+tools/verifyJobBlock.js
+tools/test_register.js
