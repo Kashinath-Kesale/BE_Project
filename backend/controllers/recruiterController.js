@@ -76,8 +76,12 @@ export const getRecruiterStats = async (req, res) => {
     }
 
     const activeJobs = await Job.countDocuments({ recruiterId: recruiter._id });
+    console.log(`[Stats] Active Jobs for ${recruiter.companyName}: ${activeJobs}`);
+
     const jobIds = await Job.find({ recruiterId: recruiter._id }).select('_id');
     const applications = await Application.find({ jobId: { $in: jobIds } });
+    console.log(`[Stats] Total Applications: ${applications.length}`);
+
     const totalApplicants = applications.length;
     const shortlisted = applications.filter(a => a.status === 'shortlisted').length;
     const hired = applications.filter(a => a.status === 'hired').length;

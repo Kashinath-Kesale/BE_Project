@@ -52,10 +52,10 @@ export default function Login() {
 
   // Cleanup session on mount
   useEffect(() => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    localStorage.removeItem("role");
-    localStorage.removeItem("name");
+    sessionStorage.removeItem("token");
+    sessionStorage.removeItem("user");
+    sessionStorage.removeItem("role");
+    sessionStorage.removeItem("name");
   }, []);
 
   const [role, setRole] = useState("candidate");
@@ -81,9 +81,9 @@ export default function Login() {
         return;
       }
 
-      localStorage.setItem("token", token);
-      localStorage.setItem("role", userRole);
-      if (name) localStorage.setItem("name", name);
+      sessionStorage.setItem("token", token);
+      sessionStorage.setItem("role", userRole);
+      if (name) sessionStorage.setItem("name", name);
 
       if (userRole === "recruiter") {
         navigate("/recruiter/dashboard", { replace: true });

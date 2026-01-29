@@ -132,6 +132,7 @@ export default function Applicants() {
                 <thead className="bg-gray-50 text-xs uppercase text-gray-700">
                   <tr>
                     <th className="px-6 py-4">Candidate</th>
+                    <th className="px-6 py-4">Match</th> {/* Added Match Column */}
                     <th className="px-6 py-4">Job Role</th>
                     <th className="px-6 py-4">Applied On</th>
                     <th className="px-6 py-4">Resume</th>
@@ -156,6 +157,15 @@ export default function Applicants() {
                               {app.candidate?.email || ''}
                             </p>
                           </div>
+                        </div>
+                      </td>
+
+                      {/* Match Score Badge */}
+                      <td className="px-6 py-4">
+                        <div className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                          ${(app.matchScore || 0) >= 80 ? 'bg-green-100 text-green-800' :
+                            (app.matchScore || 0) >= 50 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}`}>
+                          {app.matchScore || 0}%
                         </div>
                       </td>
 
@@ -240,7 +250,14 @@ export default function Applicants() {
                         <div className="text-xs text-gray-500">{app.candidate?.email}</div>
                       </div>
                     </div>
-                    <StatusBadge status={app.status} />
+                    <div className="flex flex-col items-end gap-2">
+                      <StatusBadge status={app.status} />
+                      <span className={`text-xs font-bold px-2 py-1 rounded-md 
+                          ${(app.matchScore || 0) >= 80 ? 'bg-green-100 text-green-700' :
+                          (app.matchScore || 0) >= 50 ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'}`}>
+                        {app.matchScore || 0}% Match
+                      </span>
+                    </div>
                   </div>
 
                   <div className="mb-3">

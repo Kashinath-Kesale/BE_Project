@@ -4,6 +4,7 @@ import Application from "../models/Application.js";
 import Job from "../models/Job.js";
 import Recruiter from "../models/Recruiter.js";
 import Candidate from "../models/Candidate.js";
+import { computeMatchPercentage } from "../utils/matching.js";
 
 // Apply to job
 export const applyToJob = async (req, res) => {
@@ -70,10 +71,29 @@ export const getRecruiterApplications = async (req, res) => {
 
       const candidateProfile = await Candidate.findOne({ userId: app.candidateId._id }).lean();
 
+      // Calculate Match Score on the fly
+      // Note: app.jobId is populated with title mainly, but we need full job details for matching logic (criteria, skills)
+      // Since we already fetched `jobs` above for filtering, we can find the full job object.
+      // But `jobs` array is local to getRecruiterApplications. 
+      // For getJobApplications, we have `job` object.
 
+      let matchScore = 0;
+      // We need to fetch full job if not available or optimized by looking up in a map
+      // Optimization: Fetch full job details in population or lookup
+      // In getRecruiterApplications, we fetched `jobs` above. Let's find it.
+
+      // Since we can't easily access the `jobs` array from inside this map if we don't pass it, 
+      // let's do a quick lookup or rely on populate if we changed it.
+      // Better: In getRecruiterApplications, 'jobs' variable IS available in closure.
+
+      const fullJob = await Job.findById(app.jobId._id).lean(); // Fetch full job for accurate scoring
+      if (candidateProfile && fullJob) {
+        matchScore = computeMatchPercentage(candidateProfile, fullJob);
+      }
 
       return {
         ...app,
+        matchScore, // <--- Added Field
         candidate: {
           _id: app.candidateId._id,
           name: app.candidateId.name,
@@ -85,6 +105,9 @@ export const getRecruiterApplications = async (req, res) => {
         }
       };
     }));
+
+    // Sort by Match Score Descending
+    enhancedApplications.sort((a, b) => b.matchScore - a.matchScore);
 
     res.json({ applications: enhancedApplications });
   } catch (error) {
@@ -117,8 +140,15 @@ export const getJobApplications = async (req, res) => {
 
       const candidateProfile = await Candidate.findOne({ userId: app.candidateId._id }).lean();
 
+      // Calculate Match Score
+      let matchScore = 0;
+      if (candidateProfile && job) {
+        matchScore = computeMatchPercentage(candidateProfile, job);
+      }
+
       return {
         ...app,
+        matchScore, // <--- Added Field
         candidate: {
           _id: app.candidateId._id,
           name: app.candidateId.name,
@@ -130,6 +160,9 @@ export const getJobApplications = async (req, res) => {
         }
       };
     }));
+
+    // Sort by Match Score Descending
+    enhancedApplications.sort((a, b) => b.matchScore - a.matchScore);
 
     res.json({ applications: enhancedApplications });
   } catch (error) {

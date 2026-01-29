@@ -9,7 +9,7 @@ const api = axios.create({
 // Request interceptor: Attach token
 api.interceptors.request.use((config) => {
   try {
-    const token = localStorage.getItem("token");
+    const token = sessionStorage.getItem("token");
     if (token) {
       config.headers = config.headers || {};
       config.headers.Authorization = `Bearer ${token}`;
@@ -26,7 +26,7 @@ api.interceptors.response.use(
   (error) => {
     if (error.response) {
       if (error.response.status === 401) {
-        localStorage.clear();
+        sessionStorage.clear();
 
         if (window.location.pathname !== "/login") {
           window.location.href = "/login";

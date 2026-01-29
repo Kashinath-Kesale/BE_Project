@@ -20,6 +20,8 @@ export const uploadResume = async (req, res) => {
 
     let parsedText = "";
     let keywords = [];
+    let extractedEmail = null;
+    let extractedPhone = null;
 
     try {
       const resp = await axios.post(PARSER_URL, form, {
@@ -28,6 +30,11 @@ export const uploadResume = async (req, res) => {
       });
       parsedText = resp.data.parsedText || "";
       keywords = resp.data.keywords || [];
+      const extractedEmail = resp.data.email;
+      const extractedPhone = resp.data.phone;
+
+      console.log("Extracted:", { keywords, extractedEmail, extractedPhone });
+
     } catch (err) {
       console.warn("Parser service failed, saving file without parsed data", err.message);
       // fallback: we keep resumeUrl but no parsedText/keywords
@@ -38,15 +45,27 @@ export const uploadResume = async (req, res) => {
     if (candidate) {
       candidate.resumeUrl = publicUrl;
       if (parsedText) candidate.parsedText = parsedText;
-      if (keywords && keywords.length) candidate.keywords = keywords;
+      // Merge new extracted skills with existing ones, unique set
+      if (keywords && keywords.length) {
+        const combinedSkills = new Set([...(candidate.skills || []), ...keywords]);
+        candidate.skills = Array.from(combinedSkills);
+        candidate.keywords = Array.from(combinedSkills); // Keep synced
+      }
+
+      // Auto-fill phone if missing and found in resume
+      if (!candidate.phone && extractedPhone) {
+        candidate.phone = extractedPhone;
+      }
+
       await candidate.save();
     } else {
       candidate = await Candidate.create({
         userId: req.user._id,
-        // keep other fields empty / they should be filled through profile endpoint
+        phone: extractedPhone || "Pending", // Fill if found, else placeholder
         resumeUrl: publicUrl,
         parsedText,
-        keywords,
+        skills: keywords,
+        keywords: keywords,
       });
     }
 
