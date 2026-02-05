@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import api from "../../services/api";
 import {
   Plus,
@@ -298,8 +299,10 @@ export default function MyJobs() {
     try {
       await api.delete(`/jobs/${id}`);
       setJobs((prev) => prev.filter((job) => job._id !== id));
-    } catch {
-      alert("Failed to delete job");
+      toast.success("Job deleted successfully");
+    } catch (err) {
+      console.error(err);
+      toast.error(err?.response?.data?.message || "Failed to delete job");
     }
   };
 
@@ -314,10 +317,10 @@ export default function MyJobs() {
       const updatedJob = res.data;
 
       setJobs(prev => prev.map(job => job._id === id ? { ...updatedJob, menuOpen: false } : job));
-      alert("Job updated successfully!");
+      toast.success("Job updated successfully!");
     } catch (err) {
       console.error(err);
-      alert(err.response?.data?.message || "Failed to update job");
+      toast.error(err.response?.data?.message || "Failed to update job");
       throw err; // Re-throw to handle loading state in modal
     }
   };

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 import api from "../../services/api";
 import { Building, MapPin, FileText, Edit2, Save, X, Lock as LockIcon } from "lucide-react";
 
@@ -148,9 +149,10 @@ export default function Profile() {
       await api.post("/recruiters/profile", profile);
       // Refresh data and switch to view mode
       await fetchProfile();
-      alert("Profile saved successfully");
-    } catch {
-      alert("Failed to save profile");
+      toast.success("Profile saved successfully");
+    } catch (err) {
+      console.error(err);
+      toast.error(err?.response?.data?.message || "Failed to save profile");
     } finally {
       setSaving(false);
     }

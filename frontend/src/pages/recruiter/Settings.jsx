@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
+import { toast } from "react-toastify";
 import api from "../../services/api.js";
 
 export default function RecruiterSettings() {
@@ -16,23 +17,23 @@ export default function RecruiterSettings() {
     const handleChangePassword = async (e) => {
         e.preventDefault();
         if (!oldPass || !newPass || !confirmPass) {
-            alert("Please fill in all password fields.");
+            toast.warn("Please fill in all password fields.");
             return;
         }
         if (newPass !== confirmPass) {
-            alert("New passwords do not match.");
+            toast.error("New passwords do not match.");
             return;
         }
         setLoading(true);
         try {
             await api.post("/auth/change-password", { oldPassword: oldPass, newPassword: newPass });
-            alert("Password changed successfully!");
+            toast.success("Password changed successfully!");
             setOldPass("");
             setNewPass("");
             setConfirmPass("");
         } catch (err) {
             console.error(err);
-            alert(err?.response?.data?.message || "Failed to change password.");
+            toast.error(err?.response?.data?.message || "Failed to change password.");
         } finally {
             setLoading(false);
         }
@@ -40,6 +41,7 @@ export default function RecruiterSettings() {
 
     const handleLogout = () => {
         localStorage.clear(); // Clear all auth data
+        toast.info("Logged out successfully");
         navigate("/login");
     };
 

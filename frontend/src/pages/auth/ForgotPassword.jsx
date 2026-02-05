@@ -1,27 +1,24 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import { toast } from "react-toastify";
 import api from "../../services/api.js";
 import { Mail, ArrowLeft } from "lucide-react";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError("");
-    setMessage("");
 
     try {
       const res = await api.post("/auth/forgot-password", { email });
-      setMessage(res.data.message || "If that email exists, a password reset link has been sent.");
+      toast.success(res.data.message || "If that email exists, a password reset link has been sent.");
     } catch (err) {
       console.error("Forgot password error:", err);
       const errorMessage = err?.response?.data?.message || "Failed to send reset email.";
-      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -44,17 +41,7 @@ export default function ForgotPassword() {
           No worries! Enter your email address and we'll send you a link to reset your password.
         </p>
 
-        {error && (
-          <div className="mb-4 text-sm font-medium text-red-700 bg-red-100 border border-red-200 rounded-lg p-3 text-center">
-            {error}
-          </div>
-        )}
 
-        {message && (
-          <div className="mb-4 text-sm font-medium text-green-700 bg-green-100 border border-green-200 rounded-lg p-3 text-center">
-            {message}
-          </div>
-        )}
 
         <form onSubmit={handleSubmit}>
           <div className="mb-6">

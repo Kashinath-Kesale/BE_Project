@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { useLocation } from "react-router-dom";
+import { toast } from "react-toastify";
 import api from "../../services/api.js";
 
 
@@ -211,7 +212,7 @@ export default function Jobs() {
 
         } catch (err) {
             console.error(err);
-            alert("Failed to load data");
+            toast.error("Failed to load data");
         } finally {
             setLoading(false);
         }
@@ -236,14 +237,14 @@ export default function Jobs() {
         setApplying(selectedJob._id);
         try {
             await api.post("/applications", { jobId: selectedJob._id });
-            alert("Applied successfully!");
+            toast.success("Applied successfully!");
 
             // Immediately mark as applied locally
             setAppliedJobIds(prev => new Set(prev).add(selectedJob._id));
 
         } catch (err) {
             console.error(err);
-            alert(err?.response?.data?.message || "Apply failed");
+            toast.error(err?.response?.data?.message || "Apply failed");
         } finally {
             setApplying(null);
             setIsModalOpen(false);

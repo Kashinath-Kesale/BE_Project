@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
+import { toast } from "react-toastify";
 import api from "../../services/api.js";
 
 
@@ -212,7 +213,7 @@ export default function Applications() {
             setApps(normalized);
         } catch (err) {
             console.error(err);
-            alert("Failed to load applications.");
+            toast.error("Failed to load applications.");
             setApps([]);
         } finally {
             setLoading(false);
@@ -239,9 +240,10 @@ export default function Applications() {
             await api.delete(`/applications/${selectedAppId}`);
             // Refetch or filter the list client-side for better UX
             setApps(prevApps => prevApps.filter(app => app._id !== selectedAppId));
+            toast.success("Application withdrawn successfully.");
         } catch (err) {
             console.error(err);
-            alert(err?.response?.data?.message || "Failed to withdraw application.");
+            toast.error(err?.response?.data?.message || "Failed to withdraw application.");
         } finally {
             setIsWithdrawModalOpen(false);
             setSelectedAppId(null);

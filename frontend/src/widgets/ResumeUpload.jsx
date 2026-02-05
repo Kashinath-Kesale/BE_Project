@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
+import { toast } from "react-toastify";
 import api from "../services/api.js";
 
 export default function ResumeUpload() {
   const [file, setFile] = useState(null);
-  const [status, setStatus] = useState("");
   const [uploading, setUploading] = useState(false);
   const [currentResume, setCurrentResume] = useState(null);
 
@@ -16,7 +16,8 @@ export default function ResumeUpload() {
           setCurrentResume(res.data.candidate.resumeUrl);
         }
       } catch (err) {
-        console.error("Failed to fetch resume:", err);
+        // Silent failure for profile fetch in widget is acceptable, or debug log
+        // console.debug("Failed to fetch resume:", err);
       }
     };
     fetchResume();
@@ -29,19 +30,18 @@ export default function ResumeUpload() {
     const validExtensions = ['.pdf', '.doc', '.docx', '.txt'];
     const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
     if (!validExtensions.includes(fileExtension)) {
-      setStatus("Invalid file type. Please upload PDF, DOC, DOCX, or TXT.");
+      toast.warn("Invalid file type. Please upload PDF, DOC, DOCX, or TXT.");
       return;
     }
 
     setUploading(true);
-    setStatus("Uploading...");
     const fd = new FormData();
     fd.append("resume", file);
     try {
       const res = await api.post("/resume/upload", fd, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      setStatus("Uploaded successfully. Your matches will update shortly.");
+      toast.success("Uploaded successfully. Your matches will update shortly.");
       // Update current resume after successful upload
       if (res.data?.candidate?.resumeUrl) {
         setCurrentResume(res.data.candidate.resumeUrl);
@@ -51,7 +51,7 @@ export default function ResumeUpload() {
       // Trigger profile refresh event for ProfileCard
       window.dispatchEvent(new CustomEvent('profileUpdated'));
     } catch (e) {
-      setStatus(e?.response?.data?.message || "Upload failed");
+      toast.error(e?.response?.data?.message || "Upload failed");
     } finally {
       setUploading(false);
     }
@@ -109,12 +109,7 @@ export default function ResumeUpload() {
         >
           {uploading ? "Uploading..." : "Upload"}
         </button>
-        {status && (
-          <p className={`text-xs ${status.includes('success') ? 'text-green-600' : status.includes('failed') ? 'text-red-600' : 'text-gray-600'}`}>
-            {status}
-          </p>
-        )}
       </div>
-    </div>
+    </div >
   );
 }

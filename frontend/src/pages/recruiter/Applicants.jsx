@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { toast } from "react-toastify";
 import api from "../../services/api";
 import {
   Filter,
@@ -43,7 +44,7 @@ export default function Applicants() {
 
   const handleViewResume = (url) => {
     if (!url) {
-      alert("No resume available for this candidate.");
+      toast.info("No resume available for this candidate.");
       return;
     }
     const fullUrl = url.startsWith("http") ? url : `${import.meta.env.VITE_BACKEND_URL || "http://localhost:5000"}${url}`;
@@ -78,9 +79,11 @@ export default function Applicants() {
       setApplications((prev) =>
         prev.map((a) => (a._id === id ? { ...a, status } : a))
       );
+      toast.success(`Candidate status updated to ${status}`);
       setActiveMenu(null);
-    } catch {
-      alert("Failed to update status");
+    } catch (err) {
+      console.error(err);
+      toast.error(err?.response?.data?.message || "Failed to update status");
     }
   };
 

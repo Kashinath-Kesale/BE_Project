@@ -1,8 +1,15 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, ArrowLeft } from "lucide-react";
+import { toast } from "react-toastify";
 import api from "../../services/api.js";
 import Logo from "../../components/Logo";
+
+// ... icons ... (skipping unchanged lines is risky with replace_file_content unless I use exact chunks. I will target the top import block first)
+
+// Actually I will do 2 separate replace calls to be safe.
+// First: Imports.
+
 
 
 // SVG Icons
@@ -53,95 +60,112 @@ export default function Register() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
 
   const onSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError("");
+
     try {
       const response = await api.post("/auth/register", { name, email, password, role });
 
       if (response.data.requiresVerification) {
         navigate("/check-email");
       } else {
+        toast.success("Account created! Please login.");
         navigate("/login");
       }
     } catch (err) {
       console.error("Registration error:", err);
       const errorMessage = err?.response?.data?.message || "Registration failed.";
-      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-gray-50 p-4 sm:p-6 lg:p-8">
-      <div className="w-full max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 shadow-2xl rounded-3xl overflow-hidden">
+    <div className="min-h-screen w-full flex items-center justify-center bg-gray-50 p-4 sm:p-6 lg:p-8 relative">
+      {/* Back Button */}
+      <Link to="/" className="absolute top-6 left-6 p-2 rounded-full bg-white text-gray-600 hover:text-indigo-600 shadow-sm border border-gray-200 transition-all">
+        <ArrowLeft size={24} />
+      </Link>
+
+      <div className="w-full max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 shadow-xl shadow-indigo-100 rounded-3xl overflow-hidden border border-gray-100">
 
         {/* Form Side */}
-        <div className="bg-white p-8 sm:p-12 order-2 md:order-1">
-          <form onSubmit={onSubmit}>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Create your account</h1>
-            <p className="text-gray-500 mb-8">Join Shortlist and get started.</p>
+        <div className="bg-white p-6 sm:p-8 md:p-12 order-2 md:order-1 flex flex-col justify-center">
+          <form onSubmit={onSubmit} className="w-full">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 mb-2 tracking-tight">Create account</h1>
+            <p className="text-gray-500 mb-6 text-sm sm:text-base">Join Shortlist and get started.</p>
 
             {/* Role Switcher */}
-            <div className="grid grid-cols-2 gap-4 mb-6">
-              <button type="button" onClick={() => setRole("candidate")} className={`flex items-center justify-center gap-3 p-4 rounded-xl border-2 transition-all duration-300 ${role === 'candidate' ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200 bg-white hover:border-gray-300'}`}>
+            <div className="grid grid-cols-2 gap-2 mb-6 p-1 bg-gray-50 rounded-2xl border border-gray-100">
+              <button
+                type="button"
+                onClick={() => setRole("candidate")}
+                className={`flex items-center justify-center gap-2 p-2.5 rounded-xl transition-all duration-200 ${role === 'candidate'
+                  ? 'bg-white text-indigo-600 shadow-sm ring-1 ring-gray-200 font-semibold'
+                  : 'text-gray-500 hover:bg-gray-100 font-medium'}`}
+              >
                 <UserIcon />
-                <span className="font-semibold text-gray-800">Candidate</span>
+                <span className="text-sm">Candidate</span>
               </button>
-              <button type="button" onClick={() => setRole("recruiter")} className={`flex items-center justify-center gap-3 p-4 rounded-xl border-2 transition-all duration-300 ${role === 'recruiter' ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200 bg-white hover:border-gray-300'}`}>
+              <button
+                type="button"
+                onClick={() => setRole("recruiter")}
+                className={`flex items-center justify-center gap-2 p-2.5 rounded-xl transition-all duration-200 ${role === 'recruiter'
+                  ? 'bg-white text-indigo-600 shadow-sm ring-1 ring-gray-200 font-semibold'
+                  : 'text-gray-500 hover:bg-gray-100 font-medium'}`}
+              >
                 <BriefcaseIcon />
-                <span className="font-semibold text-gray-800">Recruiter</span>
+                <span className="text-sm">Recruiter</span>
               </button>
             </div>
 
-            {error && <div className="mb-4 text-sm font-medium text-red-700 bg-red-100 border border-red-200 rounded-lg p-3 text-center">{error}</div>}
+            <div className="space-y-3">
+              {/* Full Name Input */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Full name</label>
+                <div className="relative group">
+                  <UserPlusIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-indigo-500 transition-colors" />
+                  <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="pl-11 pr-4 py-3 w-full rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none" placeholder="Your full name" required />
+                </div>
+              </div>
 
-            {/* Full Name Input */}
-            <div className="mb-5">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Full name</label>
-              <div className="relative">
-                <UserPlusIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="pl-12 pr-4 py-3 w-full rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition duration-200" placeholder="Your full name" required />
+              {/* Email Input */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Email</label>
+                <div className="relative group">
+                  <MailIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-indigo-500 transition-colors" />
+                  <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="pl-11 pr-4 py-3 w-full rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none" placeholder="you@example.com" required />
+                </div>
+              </div>
+
+              {/* Password Input */}
+              <div className="mb-4">
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Password</label>
+                <div className="relative group">
+                  <LockIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-indigo-500 transition-colors" />
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="pl-11 pr-12 py-3 w-full rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none"
+                    placeholder="••••••••"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1 rounded-md hover:bg-gray-100 transition-colors"
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
               </div>
             </div>
 
-            {/* Email Input */}
-            <div className="mb-5">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-              <div className="relative">
-                <MailIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="pl-12 pr-4 py-3 w-full rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition duration-200" placeholder="you@example.com" required />
-              </div>
-            </div>
-
-            {/* Password Input */}
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-              <div className="relative">
-                <LockIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="pl-12 pr-12 py-3 w-full rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition duration-200"
-                  placeholder="••••••••"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
-                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                </button>
-              </div>
-            </div>
-
-            <button disabled={loading} className="w-full py-3.5 rounded-xl bg-indigo-600 text-white font-bold text-base shadow-md hover:bg-indigo-700 transition duration-300 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center">
+            <button disabled={loading} className="w-full mt-5 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold text-base shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/40 hover:-translate-y-0.5 transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center disabled:translate-y-0">
               {loading && <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -149,24 +173,29 @@ export default function Register() {
               {loading ? 'Creating account...' : 'Create account'}
             </button>
 
-            <div className="mt-8 text-sm text-center text-gray-600">
+            <div className="mt-6 text-sm text-center text-gray-600">
               Already have an account? <Link to="/login" className="text-indigo-600 font-semibold hover:underline">Login</Link>
             </div>
           </form>
         </div>
 
         {/* Informational Side */}
-        <div className="hidden md:flex flex-col justify-center p-12 bg-indigo-700 text-white order-1 md:order-2 subpixel-antialiased">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center">
-              <Logo className="text-white w-6 h-6" />
+        <div className="hidden md:flex flex-col justify-center p-12 bg-gradient-to-br from-indigo-600 to-purple-700 text-white order-1 md:order-2 subpixel-antialiased relative overflow-hidden">
+          {/* Subtle pattern overlay */}
+          <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:20px_20px]"></div>
+
+          <div className="relative z-10">
+            <div className="flex items-center gap-3 mb-8">
+              <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-inner border border-white/10">
+                <Logo className="text-white w-7 h-7" />
+              </div>
+              <span className="text-2xl font-bold tracking-tight">Shortlist</span>
             </div>
-            <span className="text-2xl font-bold tracking-tight">Shortlist</span>
+            <h2 className="text-4xl font-extrabold leading-tight tracking-tight mb-6">Join a new era of <br /> <span className="text-indigo-200">recruitment.</span></h2>
+            <p className="text-indigo-100 text-lg leading-relaxed max-w-md">
+              Whether you're sourcing top talent or seeking your next big opportunity, you're in the right place.
+            </p>
           </div>
-          <h2 className="text-4xl font-extrabold leading-tight text-black tracking-tight">Join a new era of recruitment and career growth.</h2>
-          <p className="mt-4 text-indigo-100 text-lg">
-            Whether you're sourcing top talent or seeking your next big opportunity, you're in the right place.
-          </p>
         </div>
 
       </div>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, ArrowLeft } from "lucide-react";
+import { toast } from "react-toastify";
 import api from "../../services/api.js";
 import Logo from "../../components/Logo";
 
@@ -53,10 +54,10 @@ export default function Login() {
 
   // Cleanup session on mount
   useEffect(() => {
-    sessionStorage.removeItem("token");
-    sessionStorage.removeItem("user");
-    sessionStorage.removeItem("role");
-    sessionStorage.removeItem("name");
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    localStorage.removeItem("role");
+    localStorage.removeItem("name");
   }, []);
 
   const [role, setRole] = useState("candidate");
@@ -64,12 +65,10 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
 
   const onSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError("");
 
     try {
       const res = await api.post("/auth/login", { email, password, role });
@@ -77,14 +76,14 @@ export default function Login() {
       const { token, role: userRole, verified, name } = res.data;
 
       if (verified === false) {
-        setError("Please verify your email before logging in.");
+        toast.error("Please verify your email before logging in.");
         setLoading(false);
         return;
       }
 
-      sessionStorage.setItem("token", token);
-      sessionStorage.setItem("role", userRole);
-      if (name) sessionStorage.setItem("name", name);
+      localStorage.setItem("token", token);
+      localStorage.setItem("role", userRole);
+      if (name) localStorage.setItem("name", name);
 
       if (userRole === "recruiter") {
         navigate("/recruiter/dashboard", { replace: true });
@@ -104,11 +103,11 @@ export default function Login() {
       navigate("/", { replace: true });
     } catch (err) {
       if (err?.response?.status === 403) {
-        setError(err?.response?.data?.message || "Please verify your email.");
+        toast.error(err?.response?.data?.message || "Please verify your email.");
       } else if (err?.response?.status === 401) {
-        setError("Invalid email or password.");
+        toast.error("Invalid email or password.");
       } else {
-        setError("Login failed.");
+        toast.error(err?.response?.data?.message || "Login failed.");
       }
     } finally {
       setLoading(false);
@@ -116,107 +115,115 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-gray-50 p-4 sm:p-6 lg:p-8">
-      <div className="w-full max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 shadow-2xl rounded-3xl overflow-hidden">
+    <div className="min-h-screen w-full flex items-center justify-center bg-gray-50 p-4 sm:p-6 lg:p-8 relative">
+      {/* Back Button */}
+      <Link to="/" className="absolute top-6 left-6 p-2 rounded-full bg-white text-gray-600 hover:text-indigo-600 shadow-sm border border-gray-200 transition-all">
+        <ArrowLeft size={24} />
+      </Link>
+
+      <div className="w-full max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 shadow-xl shadow-indigo-100 rounded-3xl overflow-hidden border border-gray-100">
         {/* Info Section */}
-        <div className="hidden md:flex flex-col justify-center p-12 bg-indigo-700 text-white subpixel-antialiased">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center">
-              <Logo className="text-white w-6 h-6" />
+        <div className="hidden md:flex flex-col justify-center p-12 bg-gradient-to-br from-indigo-600 to-purple-700 text-white subpixel-antialiased relative overflow-hidden">
+          {/* Subtle pattern overlay */}
+          <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:20px_20px]"></div>
+
+          <div className="relative z-10">
+            <div className="flex items-center gap-3 mb-8">
+              <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-inner border border-white/10">
+                <Logo className="text-white w-7 h-7" />
+              </div>
+              <span className="text-2xl font-bold tracking-tight">Shortlist</span>
             </div>
-            <span className="text-2xl font-bold tracking-tight">Shortlist</span>
+            <h2 className="text-4xl font-extrabold leading-tight tracking-tight mb-6">
+              Welcome back to the <br /> <span className="text-indigo-200">future of hiring.</span>
+            </h2>
+            <p className="text-indigo-100 text-lg leading-relaxed max-w-md">
+              Sign in to continue your journey. Find matched jobs, track applications, and connect with top-tier talent.
+            </p>
           </div>
-          <h2 className="text-4xl font-extrabold leading-tight text-black tracking-tight">
-            Welcome back to the future of hiring.
-          </h2>
-          <p className="mt-4 text-indigo-100 text-lg">
-            Sign in to continue your journey. Find matched jobs, track applications, and connect with top-tier talent.
-          </p>
         </div>
 
         {/* Form Section */}
-        <div className="bg-white p-8 sm:p-12">
-          <form onSubmit={onSubmit}>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Login</h1>
-            <p className="text-gray-500 mb-8">Select your role and enter your details.</p>
+        <div className="bg-white p-8 sm:p-12 md:p-16">
+          <form onSubmit={onSubmit} className="space-y-6">
+            <div>
+              <h1 className="text-3xl font-extrabold text-gray-900 mb-2 tracking-tight">Login</h1>
+              <p className="text-gray-500">Select your role and enter your details.</p>
+            </div>
 
             {/* Role Switcher */}
-            <div className="grid grid-cols-3 gap-2 mb-6">
+            <div className="grid grid-cols-3 gap-3 p-1 bg-gray-50 rounded-2xl border border-gray-100">
               <button
                 type="button"
                 onClick={() => setRole("candidate")}
-                className={`flex flex-col sm:flex-row items-center justify-center gap-2 p-3 rounded-xl border-2 transition-all duration-300 ${role === "candidate"
-                  ? "border-indigo-500 bg-indigo-50"
-                  : "border-gray-200 bg-white hover:border-gray-300"
+                className={`flex flex-col items-center justify-center gap-2 p-3 rounded-xl transition-all duration-200 ${role === "candidate"
+                  ? "bg-white text-indigo-600 shadow-sm ring-1 ring-gray-200 font-semibold"
+                  : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 font-medium"
                   }`}
               >
                 <UserIcon />
-                <span className="font-semibold text-gray-800 text-sm">Candidate</span>
+                <span className="text-xs">Candidate</span>
               </button>
               <button
                 type="button"
                 onClick={() => setRole("recruiter")}
-                className={`flex flex-col sm:flex-row items-center justify-center gap-2 p-3 rounded-xl border-2 transition-all duration-300 ${role === "recruiter"
-                  ? "border-indigo-500 bg-indigo-50"
-                  : "border-gray-200 bg-white hover:border-gray-300"
+                className={`flex flex-col items-center justify-center gap-2 p-3 rounded-xl transition-all duration-200 ${role === "recruiter"
+                  ? "bg-white text-indigo-600 shadow-sm ring-1 ring-gray-200 font-semibold"
+                  : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 font-medium"
                   }`}
               >
                 <BriefcaseIcon />
-                <span className="font-semibold text-gray-800 text-sm">Recruiter</span>
+                <span className="text-xs">Recruiter</span>
               </button>
               <button
                 type="button"
                 onClick={() => setRole("admin")}
-                className={`flex flex-col sm:flex-row items-center justify-center gap-2 p-3 rounded-xl border-2 transition-all duration-300 ${role === "admin"
-                  ? "border-indigo-500 bg-indigo-50"
-                  : "border-gray-200 bg-white hover:border-gray-300"
+                className={`flex flex-col items-center justify-center gap-2 p-3 rounded-xl transition-all duration-200 ${role === "admin"
+                  ? "bg-white text-indigo-600 shadow-sm ring-1 ring-gray-200 font-semibold"
+                  : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 font-medium"
                   }`}
               >
                 <AdminIcon />
-                <span className="font-semibold text-gray-800 text-sm">Admin</span>
+                <span className="text-xs">Admin</span>
               </button>
             </div>
 
-            {error && (
-              <div className="mb-4 text-sm font-medium text-red-700 bg-red-100 border border-red-200 rounded-lg p-3 text-center">
-                {error}
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Email Address</label>
+                <div className="relative group">
+                  <MailIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-indigo-500 transition-colors" />
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="pl-11 pr-4 py-3.5 w-full rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none"
+                    placeholder="you@example.com"
+                    required
+                  />
+                </div>
               </div>
-            )}
 
-            <div className="mb-5">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-              <div className="relative">
-                <MailIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="pl-12 pr-4 py-3 w-full rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition duration-200"
-                  placeholder="you@example.com"
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-              <div className="relative">
-                <LockIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="pl-12 pr-12 py-3 w-full rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition duration-200"
-                  placeholder="••••••••"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
-                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                </button>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Password</label>
+                <div className="relative group">
+                  <LockIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-indigo-500 transition-colors" />
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="pl-11 pr-12 py-3.5 w-full rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none"
+                    placeholder="••••••••"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1 rounded-md hover:bg-gray-100 transition-colors"
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -233,7 +240,7 @@ export default function Login() {
 
             <button
               disabled={loading}
-              className="w-full py-3.5 rounded-xl bg-indigo-600 text-white font-bold text-base shadow-md hover:bg-indigo-700 transition duration-300 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center"
+              className="w-full py-3.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold text-base shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/40 hover:-translate-y-0.5 transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center disabled:translate-y-0"
             >
               {loading && (
                 <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg"

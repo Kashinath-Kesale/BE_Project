@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
+import { toast } from "react-toastify";
 import api from "../../services/api.js";
 
 const ProfileCompletion = ({ completion }) => (
@@ -96,7 +97,7 @@ export default function Profile() {
             console.error(err);
             // Don't show alert for 404 (no profile yet), only for real errors
             if (err?.response?.status !== 404) {
-                alert(err?.response?.data?.message || "Failed to load profile");
+                toast.error(err?.response?.data?.message || "Failed to load profile");
             }
         } finally {
             setLoading(false);
@@ -184,7 +185,7 @@ export default function Profile() {
 
         // Validate form before submitting
         if (!validateForm()) {
-            alert("Please fix the errors in the form before saving.");
+            toast.warn("Please fix the errors in the form before saving.");
             return;
         }
 
@@ -193,13 +194,13 @@ export default function Profile() {
             const res = await api.post("/candidate/profile", form);
             setCandidate(res.data.candidate);
             setCompletion(res.data.profileCompletion);
-            alert("Profile updated successfully!");
+            toast.success("Profile updated successfully!");
 
             // Trigger profile refresh event for ProfileCard on dashboard
             window.dispatchEvent(new CustomEvent('profileUpdated'));
         } catch (err) {
             console.error(err);
-            alert(err?.response?.data?.message || "Failed to save profile");
+            toast.error(err?.response?.data?.message || "Failed to save profile");
         } finally {
             setSaving(false);
         }

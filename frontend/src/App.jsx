@@ -38,71 +38,76 @@ import ProtectedRoute from "./components/ProtectedRoute";
 
 
 // --- Main App Component ---
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 export default function App() {
   return (
-    <Routes>
-      {/* --- Public Routes --- */}
-      <Route path="/" element={<Welcome />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
-      <Route path="/check-email" element={<CheckEmail />} />
-      <Route path="/verify" element={<Verify />} />
-      <Route path="/forgot-password" element={<ForgotPassword />} />
-      <Route path="/reset-password" element={<ResetPassword />} />
+    <>
+      <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover theme="light" />
+      <Routes>
+        {/* --- Public Routes --- */}
+        <Route path="/" element={<Welcome />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/check-email" element={<CheckEmail />} />
+        <Route path="/verify" element={<Verify />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
 
-      {/* --- Candidate Dashboard Routes --- */}
-      <Route
-        path="/candidate" // Using a specific path for the candidate section
-        element={
-          <ProtectedRoute allowedRoles={['candidate']}>
-            <DashboardLayout />
-          </ProtectedRoute>
-        }
-      >
-        <Route index element={<DashboardHome />} /> {/* Renders at /candidate */}
-        <Route path="dashboard" element={<DashboardHome />} />
-        <Route path="profile" element={<Profile />} />
-        <Route path="jobs" element={<Jobs />} />
-        <Route path="applications" element={<Applications />} />
-        <Route path="settings" element={<Settings />} />
-      </Route>
+        {/* --- Candidate Dashboard Routes --- */}
+        <Route
+          path="/candidate" // Using a specific path for the candidate section
+          element={
+            <ProtectedRoute allowedRoles={['candidate']}>
+              <DashboardLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<DashboardHome />} /> {/* Renders at /candidate */}
+          <Route path="dashboard" element={<DashboardHome />} />
+          <Route path="profile" element={<Profile />} />
+          <Route path="jobs" element={<Jobs />} />
+          <Route path="applications" element={<Applications />} />
+          <Route path="settings" element={<Settings />} />
+        </Route>
 
-      {/* --- Recruiter Dashboard Routes --- */}
-      <Route
-        path="/recruiter"
-        element={
-          <ProtectedRoute allowedRoles={['recruiter']}>
-            <RecruiterDashboardLayout />
-          </ProtectedRoute>
-        }
-      >
-        <Route index element={<RecruiterDashboard />} /> {/* Renders at /recruiter */}
-        <Route path="dashboard" element={<RecruiterDashboard />} />
-        <Route path="profile" element={<RecruiterProfile />} />
-        <Route path="my-jobs" element={<RecruiterJobs />} />
-        <Route path="create-job" element={<CreateJob />} />
-        <Route path="applicants" element={<Applicants />} />
-        <Route path="applicants/:jobId" element={<Applicants />} /> {/* For filtering by job */}
-        <Route path="settings" element={<RecruiterSettings />} />
-      </Route>
+        {/* --- Recruiter Dashboard Routes --- */}
+        <Route
+          path="/recruiter"
+          element={
+            <ProtectedRoute allowedRoles={['recruiter']}>
+              <RecruiterDashboardLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<RecruiterDashboard />} /> {/* Renders at /recruiter */}
+          <Route path="dashboard" element={<RecruiterDashboard />} />
+          <Route path="profile" element={<RecruiterProfile />} />
+          <Route path="my-jobs" element={<RecruiterJobs />} />
+          <Route path="create-job" element={<CreateJob />} />
+          <Route path="applicants" element={<Applicants />} />
+          <Route path="applicants/:jobId" element={<Applicants />} /> {/* For filtering by job */}
+          <Route path="settings" element={<RecruiterSettings />} />
+        </Route>
 
-      {/* --- Admin Dashboard Routes --- */}
-      <Route
-        path="/admin"
-        element={
-          <ProtectedRoute allowedRoles={['admin']}>
-            <AdminDashboardLayout />
-          </ProtectedRoute>
-        }
-      >
-        <Route index element={<AdminDashboard />} />
-        <Route path="dashboard" element={<AdminDashboard />} />
-      </Route>
+        {/* --- Admin Dashboard Routes --- */}
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <AdminDashboardLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<AdminDashboard />} />
+          <Route path="dashboard" element={<AdminDashboard />} />
+        </Route>
 
-      {/* Optional: Add a catch-all 404 route */}
-      <Route path="*" element={<div className="p-8 text-center"><h2>404: Page Not Found</h2></div>} />
-    </Routes>
+        {/* Optional: Add a catch-all 404 route */}
+        <Route path="*" element={<div className="p-8 text-center"><h2>404: Page Not Found</h2></div>} />
+      </Routes>
+    </>
   );
 }
 

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { toast } from "react-toastify";
 import { Check, X, Building2, MapPin, Globe, Loader2, AlertCircle } from "lucide-react";
 
 const AdminDashboard = () => {
@@ -42,7 +43,7 @@ const AdminDashboard = () => {
             setRecruiters((prev) => prev.filter((r) => r._id !== id));
         } catch (err) {
             console.error(`Error ${action}ing recruiter:`, err);
-            alert(`Failed to ${action} recruiter. Please try again.`);
+            toast.error(`Failed to ${action} recruiter. Please try again.`);
         } finally {
             setActionLoading(null);
         }

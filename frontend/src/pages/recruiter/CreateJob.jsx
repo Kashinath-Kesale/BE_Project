@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import api from "../../services/api";
 
 // Reusable Components
@@ -104,7 +105,6 @@ export default function CreateJob() {
   });
   const [skills, setSkills] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
 
   // Fetch recruiter status
   useEffect(() => {
@@ -127,9 +127,11 @@ export default function CreateJob() {
         ...job,
         keywords: skills,
       });
+      toast.success("Job posted successfully!");
       navigate("/recruiter/my-jobs");
-    } catch {
-      setError("Failed to create job");
+    } catch (err) {
+      console.error(err);
+      toast.error(err?.response?.data?.message || "Failed to create job");
     } finally {
       setLoading(false);
     }
@@ -251,11 +253,6 @@ export default function CreateJob() {
             </div>
           </div>
 
-          {error && (
-            <div className="bg-red-100 text-red-800 p-3 rounded">
-              {error}
-            </div>
-          )}
 
           <button
             type="submit"

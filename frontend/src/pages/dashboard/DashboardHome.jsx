@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import api from '../../services/api.js';
 import ProfileCard from '../../widgets/ProfileCard.jsx';
 import ResumeUpload from '../../widgets/ResumeUpload.jsx';
@@ -146,9 +147,12 @@ const DashboardHome = () => {
           setJobs(sortedJobs);
         } catch (err) {
           console.error('Failed to load jobs:', err);
+          // Toast only if it's not just an empty list or minor issue, but let's be safe
+          // toast.error("Could not load job recommendations"); 
         }
       } catch (err) {
         console.error('Dashboard error:', err);
+        toast.error("Failed to load dashboard data");
       } finally {
         setLoading(false);
       }
