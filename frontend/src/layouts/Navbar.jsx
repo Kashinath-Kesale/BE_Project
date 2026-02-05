@@ -1,5 +1,5 @@
 // src/layouts/Navbar.jsx
-import { Bell, Search, Menu, User } from "lucide-react";
+import { Menu, User } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -7,9 +7,7 @@ import api from "../services/api.js";
 
 const Navbar = ({ toggleSidebar, role }) => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [userAvatar, setUserAvatar] = useState(null);
   const [userName, setUserName] = useState("");
-  const [avatarError, setAvatarError] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -21,13 +19,7 @@ const Navbar = ({ toggleSidebar, role }) => {
         const res = await api.get("/candidate/profile");
         const candidate = res.data?.candidate;
 
-        if (candidate?.avatarUrl) {
-          setUserAvatar(
-            candidate.avatarUrl.startsWith("http")
-              ? candidate.avatarUrl
-              : `${import.meta.env.VITE_BACKEND_URL || "http://localhost:5000"}${candidate.avatarUrl}`
-          );
-        }
+
 
         setUserName(candidate?.userId?.name || candidate?.name || "");
       } catch {
@@ -51,36 +43,16 @@ const Navbar = ({ toggleSidebar, role }) => {
         <Menu />
       </button>
 
-      {/* Center */}
-      <div className="flex-1 flex justify-center">
-        <div className="relative w-1/2">
-          <input
-            type="text"
-            placeholder="Search..."
-            className="w-full px-4 py-2 border rounded-lg pl-10"
-          />
-          <Search className="absolute left-3 top-2.5 text-gray-500" size={18} />
-        </div>
-      </div>
-
       {/* Right */}
-      <div className="flex items-center gap-6 relative">
-        <Bell />
+      <div className="flex items-center gap-6 relative ml-auto">
 
         <div className="relative">
           <div
-            className="w-10 h-10 rounded-full border bg-gray-100 cursor-pointer flex items-center justify-center"
+            className="w-10 h-10 rounded-full border bg-indigo-100 text-indigo-700 font-bold cursor-pointer flex items-center justify-center hover:bg-indigo-200 transition-colors"
             onClick={() => setDropdownOpen(!dropdownOpen)}
           >
-            {userAvatar && !avatarError ? (
-              <img
-                src={userAvatar}
-                alt="user"
-                className="w-full h-full rounded-full object-cover"
-                onError={() => setAvatarError(true)}
-              />
-            ) : userName ? (
-              <span className="text-sm font-semibold text-gray-600">
+            {userName ? (
+              <span className="text-sm">
                 {userName
                   .split(" ")
                   .filter(Boolean)
@@ -90,7 +62,7 @@ const Navbar = ({ toggleSidebar, role }) => {
                   .toUpperCase()}
               </span>
             ) : (
-              <User size={20} className="text-gray-400" />
+              <User size={20} className="text-indigo-600" />
             )}
           </div>
 

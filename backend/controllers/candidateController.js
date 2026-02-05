@@ -83,24 +83,4 @@ export const getCandidateProfile = async (req, res) => {
   }
 };
 
-// Upload avatar
-export const uploadAvatar = async (req, res) => {
-  try {
-    if (!req.file) return res.status(400).json({ message: "No file uploaded" });
 
-    const publicUrl = `/uploads/avatars/${req.user._id}/${req.file.filename}`;
-
-    let candidate = await Candidate.findOne({ userId: req.user._id });
-    if (!candidate) {
-      candidate = await Candidate.create({ userId: req.user._id, avatarUrl: publicUrl });
-    } else {
-      candidate.avatarUrl = publicUrl;
-      await candidate.save();
-    }
-
-    const completion = calculateProfileCompletion(candidate);
-    res.json({ message: "Avatar uploaded", candidate, profileCompletion: completion });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};

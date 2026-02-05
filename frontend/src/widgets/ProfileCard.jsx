@@ -8,7 +8,6 @@ export default function ProfileCard() {
   const location = useLocation();
   const [error, setError] = useState("");
   const [profile, setProfile] = useState(null);
-  const [avatarError, setAvatarError] = useState(false);
 
   const fetchProfile = async () => {
     try {
@@ -70,31 +69,17 @@ export default function ProfileCard() {
         .slice(0, 2)
         .toUpperCase()
       : "U";
-  const hasAvatar = candidate?.avatarUrl;
   const completion = profile?.profileCompletion ?? 0;
 
   return (
-    <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-200 text-center">
+    <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-200 text-center h-full">
       {/* ✅ Avatar */}
-      <div className="w-24 h-24 rounded-full mx-auto mb-4 border-4 border-gray-200 shadow-md bg-gray-100 flex items-center justify-center text-2xl font-bold text-gray-500">
-        {hasAvatar && !avatarError ? (
-          <img
-            src={
-              hasAvatar.startsWith("http")
-                ? hasAvatar
-                : `${import.meta.env.VITE_BACKEND_URL || "http://localhost:5000"}${hasAvatar}`
-            }
-            alt="Candidate Avatar"
-            className="w-full h-full rounded-full object-cover"
-            onError={() => setAvatarError(true)}
-          />
-        ) : (
-          <span>{initials}</span>
-        )}
+      <div className="w-16 h-16 rounded-full mx-auto mb-3 border-4 border-gray-100 bg-indigo-50 flex items-center justify-center text-xl font-bold text-indigo-600 select-none">
+        <span>{initials}</span>
       </div>
 
-      <h3 className="text-xl font-bold text-gray-800">{userName}</h3>
-      <p className="text-sm text-gray-500 mb-4">
+      <h3 className="text-xl font-bold text-gray-800 truncate">{userName}</h3>
+      <p className="text-sm text-gray-500 mb-3 truncate">
         {candidate?.branch || "Branch N/A"}
         {candidate?.education?.year ? ` • ${candidate.education.year}` : ""}
       </p>
@@ -111,7 +96,7 @@ export default function ProfileCard() {
               className="bg-indigo-600 h-2.5 rounded-full"
             />
           </div>
-          <p className="text-xs text-gray-600 mb-4">
+          <p className="text-sm text-gray-600 mb-3">
             {completion}% Profile Completion
           </p>
         </>
@@ -119,7 +104,7 @@ export default function ProfileCard() {
 
       <Link
         to="/candidate/profile"
-        className="block w-full px-4 py-2 text-sm font-semibold text-indigo-600 bg-indigo-100 rounded-lg hover:bg-indigo-200 transition-colors"
+        className="block w-full px-3 py-2 text-sm font-semibold text-indigo-600 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors"
       >
         View Profile
       </Link>

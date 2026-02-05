@@ -10,7 +10,7 @@ export const calculateProfileCompletion = (candidate) => {
   if (candidate.branch) completion += 5;
 
   // Academic Details (40%)
-  if (candidate.education?.btech?.year && candidate.education?.btech?.cgp) completion += 20; // Undergraduate
+  if (candidate.education?.btech?.year && candidate.education?.btech?.cgpa) completion += 20; // Undergraduate
   if (candidate.education?.tenth?.percentage) completion += 10; // 10th
   if (candidate.education?.twelfth?.percentage) completion += 10; // 12th
 

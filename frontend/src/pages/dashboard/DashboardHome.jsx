@@ -147,8 +147,6 @@ const DashboardHome = () => {
           setJobs(sortedJobs);
         } catch (err) {
           console.error('Failed to load jobs:', err);
-          // Toast only if it's not just an empty list or minor issue, but let's be safe
-          // toast.error("Could not load job recommendations"); 
         }
       } catch (err) {
         console.error('Dashboard error:', err);
@@ -167,29 +165,94 @@ const DashboardHome = () => {
   const uniqueJobKeywords = [...new Set(allJobKeywords)];
 
   return (
-    <div className="w-full">
-      <div className="max-w-7xl mx-auto">
+    <div className="w-full h-[calc(100vh-5rem)] overflow-hidden p-4">
+      <div className="max-w-7xl mx-auto h-full flex flex-col">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-2 flex-shrink-0">
           <h1 className="text-3xl font-bold text-gray-900">Welcome Back{user ? `, ${user}` : ''}!</h1>
-          <p className="text-gray-500 mt-1">Here's your career snapshot. Let's find your next opportunity.</p>
+          <p className="text-base text-gray-500">Here's your career snapshot.</p>
         </div>
 
-        {/* Main Grid Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-          {/* Left Column */}
-          <div className="lg:col-span-1 space-y-8">
-            <ProfileCard />
-            <ResumeUpload />
+        {/* Main Grid Layout - Compact & Full Height */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full min-h-0 pb-2">
+
+          {/* Left Column: Profile & Resume (Stacked) */}
+          <div className="lg:col-span-1 h-full flex flex-col gap-4 overflow-y-auto pr-1 custom-scrollbar">
+            <div className="flex-shrink-0">
+              <ProfileCard />
+            </div>
+            <div className="flex-shrink-0">
+              <ResumeUpload />
+            </div>
           </div>
 
-          {/* Right Column */}
-          <div className="lg:col-span-2 space-y-8">
-            <JobsList jobs={jobs} loading={loading} />
-            {uniqueJobKeywords.length > 0 && <SkillGap candidateKeywords={candidateKeywords} jobKeywords={uniqueJobKeywords} />}
+          {/* Right Column: Jobs & Skills */}
+          <div className="lg:col-span-2 h-full flex flex-col gap-4 overflow-hidden">
+
+            {/* Jobs List - Takes available space */}
+            <div className="flex-1 bg-white p-4 rounded-2xl shadow-sm border border-gray-200 flex flex-col min-h-0">
+              <div className="flex items-center justify-between mb-3 flex-shrink-0">
+                <h3 className="font-bold text-gray-800 text-base flex items-center gap-2">
+                  <BriefcaseIcon /> Top Job Matches
+                </h3>
+                <Link to="/candidate/jobs" className="text-xs font-semibold text-indigo-600 hover:text-indigo-800">
+                  View All
+                </Link>
+              </div>
+
+              {loading ? (
+                <div className="space-y-3">
+                  {[1, 2, 3].map(i => <div key={i} className="h-20 bg-gray-50 rounded-lg animate-pulse" />)}
+                </div>
+              ) : jobs.length === 0 ? (
+                <div className="flex-1 flex flex-col items-center justify-center text-center p-4">
+                  <p className="text-gray-500 text-sm mb-2">No matches yet.</p>
+                  <button onClick={() => window.location.href = '/candidate/jobs'} className="text-indigo-600 text-sm font-medium">Browse Jobs</button>
+                </div>
+              ) : (
+                <div className="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar">
+                  {jobs.map((item) => {
+                    const job = item.job || item;
+                    const match = item.matchPercentage || 0;
+                    return (
+                      <div
+                        key={job._id}
+                        onClick={() => window.location.href = `/candidate/jobs?open=${job._id}`}
+                        className="p-3 rounded-lg border border-gray-100 hover:border-indigo-300 bg-gray-50/50 hover:bg-white transition-all cursor-pointer group"
+                      >
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h4 className="font-semibold text-gray-800 text-sm group-hover:text-indigo-700 transition-colors">{job.title}</h4>
+                            <p className="text-xs text-gray-500 mt-0.5">{job.companyName} • {job.location}</p>
+                          </div>
+                          <span className={`text-sm font-bold ${match >= 80 ? 'text-green-600' : match >= 50 ? 'text-indigo-600' : 'text-gray-500'}`}>
+                            {Math.round(match)}%
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Skills (Fixed height at bottom if exists) */}
+            {uniqueJobKeywords.length > 0 && (
+              <div className="flex-shrink-0">
+                <SkillGap candidateKeywords={candidateKeywords} jobKeywords={uniqueJobKeywords} />
+              </div>
+            )}
           </div>
+
         </div>
       </div>
+
+      <style>{`
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { bg: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #d1d5db; }
+      `}</style>
     </div>
   );
 };
