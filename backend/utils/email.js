@@ -28,7 +28,7 @@ export const sendEmail = async ({ to, subject, html }) => {
 
   try {
     const info = await resend.emails.send({
-      from: process.env.MAIL_FROM || 'ResumeLab <onboarding@resend.dev>',
+      from: process.env.MAIL_FROM || 'Shortlist <onboarding@resend.dev>',
       to,
       subject,
       html,

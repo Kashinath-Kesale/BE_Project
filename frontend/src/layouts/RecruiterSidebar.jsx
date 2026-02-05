@@ -1,5 +1,6 @@
 // src/layouts/RecruiterSidebar.jsx
 import { Menu, X } from "lucide-react";
+import Logo from "../components/Logo";
 import { useLocation, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 
@@ -24,11 +25,10 @@ const RecruiterSidebar = ({ isOpen, toggle, links }) => {
       )}
 
       <div
-        className={`fixed top-0 left-0 h-full bg-white shadow-lg z-50 flex flex-col transition-all duration-300 overflow-visible ${
-          isMobile 
-            ? (isOpen ? "translate-x-0 w-46" : "-translate-x-full w-46") 
-            : (isOpen ? "w-56" : "w-20")
-        }`}
+        className={`fixed top-0 left-0 h-full bg-white shadow-lg z-50 flex flex-col transition-all duration-300 overflow-visible ${isMobile
+          ? (isOpen ? "translate-x-0 w-46" : "-translate-x-full w-46")
+          : (isOpen ? "w-56" : "w-20")
+          }`}
       >
         {/* Header */}
         <div className="flex items-center justify-center p-4 border-b">
@@ -36,14 +36,9 @@ const RecruiterSidebar = ({ isOpen, toggle, links }) => {
             <>
               <div className="flex items-center gap-2 flex-1">
                 <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center shadow-md flex-shrink-0">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-white">
-                    <path d="M4 4v16h16" />
-                    <path d="m4 12 5 5" />
-                    <path d="M12 4h8" />
-                    <path d="m16 8 4-4" />
-                  </svg>
+                  <Logo className="text-white w-[18px] h-[18px]" />
                 </div>
-                <h1 className="text-lg font-bold text-gray-900">ResumeLab</h1>
+                <h1 className="text-lg font-bold text-gray-900">Shortlist</h1>
               </div>
               {/* Toggle button when open */}
               <button
@@ -82,13 +77,11 @@ const RecruiterSidebar = ({ isOpen, toggle, links }) => {
                     toggle();
                   }
                 }}
-                className={`group relative flex items-center ${
-                  isOpen ? "gap-3" : "justify-center"
-                } p-2 rounded-lg transition ${
-                  active
+                className={`group relative flex items-center ${isOpen ? "gap-3" : "justify-center"
+                  } p-2 rounded-lg transition ${active
                     ? "bg-blue-100 text-blue-600 border-l-4 border-blue-600"
                     : "hover:bg-gray-100 text-gray-700"
-                }`}
+                  }`}
               >
                 {link.icon}
                 {isOpen && <span>{link.name}</span>}

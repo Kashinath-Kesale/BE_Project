@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
 import api from "../../services/api.js";
+import Logo from "../../components/Logo";
 
 const UserIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none"
@@ -121,13 +122,9 @@ export default function Login() {
         <div className="hidden md:flex flex-col justify-center p-12 bg-indigo-700 text-white subpixel-antialiased">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none"
-                stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
-                className="text-white">
-                <path d="M4 4v16h16" /><path d="m4 12 5 5" /><path d="M12 4h8" /><path d="m16 8 4-4" />
-              </svg>
+              <Logo className="text-white w-6 h-6" />
             </div>
-            <span className="text-2xl font-bold tracking-tight">ResumeLab</span>
+            <span className="text-2xl font-bold tracking-tight">Shortlist</span>
           </div>
           <h2 className="text-4xl font-extrabold leading-tight text-black tracking-tight">
             Welcome back to the future of hiring.

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
 import api from "../../services/api.js";
+import Logo from "../../components/Logo";
 
 
 // SVG Icons
@@ -83,7 +84,7 @@ export default function Register() {
         <div className="bg-white p-8 sm:p-12 order-2 md:order-1">
           <form onSubmit={onSubmit}>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Create your account</h1>
-            <p className="text-gray-500 mb-8">Join ResumeLab and get started.</p>
+            <p className="text-gray-500 mb-8">Join Shortlist and get started.</p>
 
             {/* Role Switcher */}
             <div className="grid grid-cols-2 gap-4 mb-6">
@@ -158,11 +159,9 @@ export default function Register() {
         <div className="hidden md:flex flex-col justify-center p-12 bg-indigo-700 text-white order-1 md:order-2 subpixel-antialiased">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-white">
-                <path d="M4 4v16h16" /><path d="m4 12 5 5" /><path d="M12 4h8" /><path d="m16 8 4-4" />
-              </svg>
+              <Logo className="text-white w-6 h-6" />
             </div>
-            <span className="text-2xl font-bold tracking-tight">ResumeLab</span>
+            <span className="text-2xl font-bold tracking-tight">Shortlist</span>
           </div>
           <h2 className="text-4xl font-extrabold leading-tight text-black tracking-tight">Join a new era of recruitment and career growth.</h2>
           <p className="mt-4 text-indigo-100 text-lg">
