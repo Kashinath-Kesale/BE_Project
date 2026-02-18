@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import { Check, X, Building2, MapPin, Globe, Loader2, AlertCircle } from "lucide-react";
 
 const AdminDashboard = () => {

@@ -2,7 +2,7 @@
 import { Menu, User } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import api from "../services/api.js";
 
 const Navbar = ({ toggleSidebar, role }) => {

@@ -1,101 +1,65 @@
 // backend/utils/matching.js
 
 /**
- * Compute Match Percentage
+ * Computes the weighted match percentage between a candidate and a job.
+ * 
  * Weight Distribution:
- * - Skills: 40%
- * - Academic (10th, 12th, CGPA): 30%
- * - Location: 20%
- * - Bonus (Gender/Other): 10%
+ * - AI Score (Semantic + Skills): 70% (Curved 1.5x)
+ * - Academic (Criteria): 30%
+ * - Location: 0% (Removed)
+ * - Bonus: 0% (Removed)
+ * 
+ * @param {Object} candidate - The candidate profile
+ * @param {Object} job - The job posting
+ * @param {number} aiScore - The semantic match score from Python service (0-100)
+ * @returns {number} - Final match percentage (0-100)
  */
-export const computeMatchPercentage = (candidate, job) => {
+export const computeMatchPercentage = (candidate, job, aiScore = 0) => {
   let score = 0;
-  let maxScore = 100;
 
-  // 1. SKILLS MATCH (40%)
-  const jobMethods = job.keywords || [];
-  const candSkills = candidate.skills || [];
-
-  // Also include keywords extracted from resume if explicit skills are empty
-  const allCandSkills = [...new Set([...candSkills, ...(candidate.keywords || [])])];
-
-  if (jobMethods.length > 0) {
-    const jobSet = new Set(jobMethods.map(k => k.toLowerCase()));
-
-    // Count matches
-    const matches = allCandSkills.filter(s => jobSet.has(s.toLowerCase())).length;
-
-    // Score calculation: (Matches / Total Job Skills) * 40
-    // If job has no skills defined, full points? No, 0 points for this section usually.
-    // Let's give proportional score.
-    const skillRatio = Math.min(matches / jobMethods.length, 1);
-    score += skillRatio * 40;
-  } else {
-    // If job has no skill requirements, give full points for this section? 
-    // Or ignore? Let's give full points to avoid punishing candidate.
-    score += 40;
+  // 1. AI MATCH (70%) - "Fresher Mode" (Keyword Heavy)
+  // Since we now rely 80% on exact keywords, the raw score will be naturally high (e.g. 80-90%).
+  // We use a tiny 1.2x polish just to round up near-perfect matches.
+  if (aiScore) {
+    const curvedAiScore = Math.min(aiScore * 1.2, 100);
+    score += (curvedAiScore / 100) * 70;
   }
 
-  // 2. ACADEMIC MATCH (30%)
-  // 10th (10%), 12th (10%), CGPA (10%)
+  // 2. ACADEMIC MATCH (30%) - High weight for presentation
   const criteria = job.criteria || {};
   const edu = candidate.education || {};
 
-  // 10th
+  let criteriaMet = 0;
+  let totalCriteria = 0;
+
+  // Check 10th
   if (criteria.minTenthPercent) {
-    const candTenth = edu.tenth?.percentage || 0;
-    if (candTenth >= criteria.minTenthPercent) score += 10;
-  } else {
-    score += 10; // No requirement = Full points
+    totalCriteria++;
+    if ((edu.tenth?.percentage || 0) >= criteria.minTenthPercent) criteriaMet++;
   }
 
-  // 12th
+  // Check 12th
   if (criteria.minTwelfthPercent) {
-    const candTwelfth = edu.twelfth?.percentage || 0;
-    if (candTwelfth >= criteria.minTwelfthPercent) score += 10;
-  } else {
-    score += 10;
+    totalCriteria++;
+    if ((edu.twelfth?.percentage || 0) >= criteria.minTwelfthPercent) criteriaMet++;
   }
 
-  // CGPA
+  // Check CGPA
   if (criteria.minCgpa) {
-    // Normalize CGPA: if candidate has percentage, approx convert / 9.5 or check if field matches
-    // Assuming both are same unit or user handled. If field is string, parsing needed.
-    // Candidate btech.cgpa might be mixed.
-    let candCgpa = parseFloat(edu.btech?.cgpa || edu.cgpa || 0); // fallback to old field
-    // Simple verification
-    if (candCgpa >= criteria.minCgpa) score += 10;
-  } else {
-    score += 10;
+    totalCriteria++;
+    // Handle potential string vs number inputs
+    const candCgpa = parseFloat(edu.btech?.cgpa || 0);
+    if (!isNaN(candCgpa) && candCgpa >= criteria.minCgpa) criteriaMet++;
   }
 
-  // 3. LOCATION MATCH (20%)
-  if (job.location) {
-    const jobLoc = job.location.toLowerCase();
-    const candLoc = (candidate.location || "").toLowerCase();
-
-    // Partial match: "Pune" matches "Pune, India"
-    if (candLoc && (candLoc.includes(jobLoc) || jobLoc.includes(candLoc))) {
-      score += 20;
-    }
+  // Calculate Academic Score
+  if (totalCriteria === 0) {
+    score += 30; // No criteria = Full 30 points
   } else {
-    score += 20; // No location preference
+    score += (criteriaMet / totalCriteria) * 30;
   }
 
-  // 4. BONUS / RESTRICTIONS (10%)
-  // Gender Preference
-  if (criteria.gender && criteria.gender !== "Any") {
-    if (candidate.gender && candidate.gender === criteria.gender) {
-      score += 10;
-    } else {
-      // If gender mismatch, strict penalty? or just 0 bonus?
-      // Usually strict filters filter OUT, but matching ranks.
-      // If strict, we should've filtered before. This is ranking.
-      score += 0;
-    }
-  } else {
-    score += 10;
-  }
+  // Removed Location and Bonus to focus on Resume & Academics as requested.
 
-  return Math.round(score);
+  return Math.round(Math.min(score, 100));
 };

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import api from "../../services/api.js";
 
 export default function RecruiterSettings() {
@@ -17,7 +17,7 @@ export default function RecruiterSettings() {
     const handleChangePassword = async (e) => {
         e.preventDefault();
         if (!oldPass || !newPass || !confirmPass) {
-            toast.warn("Please fill in all password fields.");
+            toast.warning("Please fill in all password fields.");
             return;
         }
         if (newPass !== confirmPass) {

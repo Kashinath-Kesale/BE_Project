@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { toast } from 'react-toastify';
+import { toast } from "sonner";
 import api from '../../services/api.js';
 import ProfileCard from '../../widgets/ProfileCard.jsx';
 import ResumeUpload from '../../widgets/ResumeUpload.jsx';

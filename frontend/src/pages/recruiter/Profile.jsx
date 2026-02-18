@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import api from "../../services/api";
 import { Building, MapPin, FileText, Edit2, Save, X, Lock as LockIcon } from "lucide-react";
 

@@ -71,29 +71,40 @@ export const getRecruiterApplications = async (req, res) => {
 
       const candidateProfile = await Candidate.findOne({ userId: app.candidateId._id }).lean();
 
-      // Calculate Match Score on the fly
-      // Note: app.jobId is populated with title mainly, but we need full job details for matching logic (criteria, skills)
-      // Since we already fetched `jobs` above for filtering, we can find the full job object.
-      // But `jobs` array is local to getRecruiterApplications. 
-      // For getJobApplications, we have `job` object.
+      // Calculate Match Score
+
+      // Calculate Match Score
+      const fullJob = await Job.findById(app.jobId._id).lean(); // Fetch full job for accurate scoring
 
       let matchScore = 0;
-      // We need to fetch full job if not available or optimized by looking up in a map
-      // Optimization: Fetch full job details in population or lookup
-      // In getRecruiterApplications, we fetched `jobs` above. Let's find it.
-
-      // Since we can't easily access the `jobs` array from inside this map if we don't pass it, 
-      // let's do a quick lookup or rely on populate if we changed it.
-      // Better: In getRecruiterApplications, 'jobs' variable IS available in closure.
-
-      const fullJob = await Job.findById(app.jobId._id).lean(); // Fetch full job for accurate scoring
       if (candidateProfile && fullJob) {
-        matchScore = computeMatchPercentage(candidateProfile, fullJob);
+        // Fetch AI Score
+        let aiScore = 0;
+        try {
+          const resumeText = candidateProfile.parsedText || "";
+          if (resumeText) {
+            // Determine Python Service URL (Reusing logic from other controller or env)
+            const PARSER_URL = process.env.PARSER_URL || "http://localhost:8000";
+
+            const axios = (await import("axios")).default; // Dynamic import if not at top
+            const resp = await axios.post(`${PARSER_URL}/match`, {
+              resume_text: resumeText,
+              job_description: fullJob.description || "",
+              job_keywords: fullJob.keywords || []
+            }, { timeout: 3000 }); // Short timeout for list view
+
+            aiScore = resp.data.match_percentage || 0;
+          }
+        } catch (err) {
+          console.error(`AI Match failed for application ${app._id}:`, err.message);
+        }
+
+        matchScore = computeMatchPercentage(candidateProfile, fullJob, aiScore);
       }
 
       return {
         ...app,
-        matchScore, // <--- Added Field
+        matchScore, // <--- Corrected Score
         candidate: {
           _id: app.candidateId._id,
           name: app.candidateId.name,
@@ -143,12 +154,31 @@ export const getJobApplications = async (req, res) => {
       // Calculate Match Score
       let matchScore = 0;
       if (candidateProfile && job) {
-        matchScore = computeMatchPercentage(candidateProfile, job);
+        // Fetch AI Score
+        let aiScore = 0;
+        try {
+          const resumeText = candidateProfile.parsedText || "";
+          if (resumeText) {
+            const PARSER_URL = process.env.PARSER_URL || "http://localhost:8000";
+            const axios = (await import("axios")).default;
+            const resp = await axios.post(`${PARSER_URL}/match`, {
+              resume_text: resumeText,
+              job_description: job.description || "",
+              job_keywords: job.keywords || []
+            }, { timeout: 3000 });
+
+            aiScore = resp.data.match_percentage || 0;
+          }
+        } catch (err) {
+          console.error(`AI Match failed for application ${app._id}:`, err.message);
+        }
+
+        matchScore = computeMatchPercentage(candidateProfile, job, aiScore);
       }
 
       return {
         ...app,
-        matchScore, // <--- Added Field
+        matchScore, // <--- Corrected Score
         candidate: {
           _id: app.candidateId._id,
           name: app.candidateId.name,

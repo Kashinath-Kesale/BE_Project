@@ -38,13 +38,12 @@ import ProtectedRoute from "./components/ProtectedRoute";
 
 
 // --- Main App Component ---
-import { ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { Toaster } from "sonner";
 
 export default function App() {
   return (
     <>
-      <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover theme="light" />
+      <Toaster position="top-right" richColors />
       <Routes>
         {/* --- Public Routes --- */}
         <Route path="/" element={<Welcome />} />

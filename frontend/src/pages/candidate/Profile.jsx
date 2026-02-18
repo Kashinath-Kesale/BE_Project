@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import { motion } from "framer-motion";
 import api from "../../services/api.js";
 import { User, MapPin, Phone, Github, Linkedin, Briefcase, GraduationCap, FileText, Save, RefreshCw, X } from "lucide-react";
@@ -230,7 +230,7 @@ export default function Profile() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!validate()) {
-            toast.warn("Please check the form for errors.");
+            toast.warning("Please check the form for errors.");
             return;
         }
 
