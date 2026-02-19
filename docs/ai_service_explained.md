@@ -1,86 +1,108 @@
-# AI Module & NLP Logic: Team Documentation
+# AI Module & NLP Logic: The Complete Guide
 
 **Hey Team!** 👋
 
-This document breaks down how our project's "Brain" (the AI Service) works. Since we are presenting this as our final year project, it's important we all understand the flow so we can answer questions from the external examiner confidently.
+This is the **"One Stop Shop"** guide to our project's AI. It explains *everything*—from the high-level flow to the deep internal logic of spaCy and Vectors. Read this, and you will be able to answer any question the external examiner throws at you.
 
 ---
 
-## 1. High-Level Overview
-Think of our AI service as a **"Smart Assistant"** for the Recruiter.
-Instead of a recruiter reading 100 resumes manually, our Python code:
-1.  **READS** the resume (Parsing).
-2.  **UNDERSTANDS** the skills (NLP).
-3.  **SCORES** the candidate against the Job Description (Matching).
+## 1. The "Big Picture" Workflow
+Imagine a candidate named **Sneha** applies for a **Full Stack Developer** role. Here is exactly what happens, step-by-step:
 
-It runs on a separate server (Python/Flask) because Python has the best AI libraries.
-
----
-
-## 2. File Structure Explained
-
-Here's what each file in the `ai/` folder actually does:
-
-### The "Core" Logic (What runs in production)
-*   **`app.py`**: This is our **API Server**. It waits for requests from our Node.js backend.
-    *   *Analogy*: The Receptionist.
-    *   *Job*: "Hey, I got a request to parse this file. `parser`, you take it. `matcher`, you grade it."
-*   **`resume_parser.py`**: This is the **Reader**.
-    *   *Tech*: Uses **spaCy** (NLP library).
-    *   *Job*: It scans the resume text to find Names, Emails, and most importantly, **Skills** (using our `data/skills.json` database).
-*   **`matcher.py`**: This is the **Grader**.
-    *   *Tech*: Uses **scikit-learn** (Math/Vectors).
-    *   *Job*: It compares the Resume vs. Job Description and gives a score (0-100%).
-
-### The "Testing" Files (Development & Debugging)
-You might see files like `test_parser.py`, `test_matcher.py`, or `test_env.py`.
-*   **What are they?**: These are widely used in industry to "Unit Test" our code.
-*   **Why do we have them?**: Before connecting the AI to the smooth Frontend, we used these to test if the logic was working in isolation.
-    *   `test_parser.py`: Checks if we can extract "React" from a sample text.
-    *   `test_matcher.py`: Checks if the math formula gives a high score for a good match.
-    *   *Note*: These are **NOT** used when the actual app runs. They are just for us developers to verify our code.
+1.  **Upload**: Sneha uploads `resume.pdf`.
+2.  **Extraction**: The system reads the PDF and converts it to raw text string:
+    > "Sneha Patil. Java Developer. Expertise in Spring Boot and SQL..."
+3.  **Parsing (The Reader)**: Our AI reads this text and extracts:
+    *   **Name**: Sneha Patil
+    *   **Skills**: [Java, Spring Boot, SQL]
+4.  **Matching (The Grader)**:
+    *   **Job Needs**: [React, Node.js, MongoDB]
+    *   **Sneha Has**: [Java, Spring Boot, SQL]
+    *   **Result**: 0% Keyword Match (She is a backend dev, job is frontend).
+5.  **Scoring**: The logic calculates a final score (e.g., 30% largely due to academic marks) and shows it to the recruiter.
 
 ---
 
-## 3. How the "Magic" Happens (The Workflow)
+## 2. Deep Dive: Parsing (How `resume_parser.py` works)
+We use a library called **spaCy**. Think of it as a pre-trained "English Teacher" inside our code.
 
-### Phase 1: Parsing (Reading the File)
-1.  User uploads a PDF.
-2.  We extract the raw text (using `pdfminer`).
-3.  We feed this text into our **NLP Pipeline** (`resume_parser.py`).
-4.  It labels words like "Aryan" as a `PERSON` and "Pune" as a `GPE` (Location).
-5.  It aggressively looks for **Skills** from our list. If it sees "Java", it grabs it.
+### The Problem with Standard NLP
+A standard NLP model knows that "Google" is a Company and "Mumbai" is a Location.
+**BUT**, it does *not* know that "React.js" is a Technical Skill. It just thinks it's a noun.
 
-### Phase 2: Matching (The Scoring)
-This is our project's **"Secret Sauce"**. We optimized it for Freshers.
+### Our Solution: The `EntityRuler`
+We customized spaCy by adding a "Rule Book" (`data/skills.json`).
+*   **Internal Logic**:
+    1.  We load the standard English model (`en_core_web_sm`).
+    2.  We insert a special pipe called `entity_ruler` **before** the standard Name Recognizer (`ner`).
+    3.  We feed it our list: `["React", "Java", "Python", ...]`.
+    4.  Now, when spaCy reads the text, if it sees "React", it immediately screams **"SKILL!"** and tags it.
 
-We use a **80/20 Rule**:
-1.  **80% Weight: Keyword Matching (The Checklist)**
-    *   *Why?* For college placements, if a company wants "React" and you know "React", you are a good fit.
-    *   *Logic*: `Matched Skills / Required Skills`.
-    *   *Example*: Job needs [React, Node]. Candidate has [React]. Score = 50%.
-2.  **20% Weight: Semantic Matching (The Context)**
-    *   *Why?* To see if the *context* suggests you are a developer, even if you missed a keyword.
-    *   *Logic*: Uses **TF-IDF Vectors** (Converting text to numbers) to measure similarity.
-
-**Our Formula:**
+**Code Visualized:**
 ```python
-Final Score = (Keyword_Matches * 0.8) + (Semantic_Context * 0.2)
+# Standard spaCy: "I know React." -> "React" is just a word.
+# Our spaCy:      "I know React." -> "React" is a SKILL (Entity).
 ```
 
 ---
 
-## 4. Why our Scores look "Human"
-You might notice our scores are usually high (like 85-95%) for good matches.
-This is intentional.
-*   Raw computer matching is often harsh (e.g., getting a 40% typically means a great match in vector math).
-*   We added a small **"Normalization Curve" (1.2x)** in the Backend.
-*   This translates the "Computer Score" into a "Human Score" (A+ Grade).
+## 3. Deep Dive: Matching (How `matcher.py` works)
+This is where the math happens. We use two strategies:
+
+### A. Keyword Matching (The Checklist) - 80% Weight
+This is simple Set Theory.
+*   **Formula**: `(Skills Found) / (Skills Required)`
+*   **Why 80%?**: For freshers, specific tools matter most. If a job needs Java and you don't know Java, you can't do the job.
+*   **Example**:
+    *   Job: `[Java, SQL]`
+    *   Resume: `[Java, Python]`
+    *   Match: 1/2 = **50%**
+
+### B. Semantic Matching (Vectors) - 20% Weight
+This uses **TF-IDF** (Term Frequency - Inverse Document Frequency).
+*   **The Concept**: Imagine every word is a coordinate on a graph.
+    *   "Developer" is at coordinates (10, 5).
+    *   "Coder" is at coordinates (10, 6).
+    *   "Chef" is at coordinates (0, 0).
+*   **The Math**:
+    1.  We turn the **Resume Text** into a Vector (Line A).
+    2.  We turn the **Job Description** into a Vector (Line B).
+    3.  We calculate the **Cosine Similarity** (The angle between the lines).
+    *   If the angle is 0° (Lines point same way), it's a 100% match.
+    *   If the angle is 90° (Lines are unrelated), it's a 0% match.
+*   **Why use this?**: It catches context. If you wrote "Experience in building servers" but didn't write the exact word "Backend", Vectors will still know you are a match.
 
 ---
 
-## Summary for the Examiner
-If asked: **"How does your AI work?"**
-> "We use a hybrid approach. We use **spaCy** for Named Entity Recognition to extract skills, and **TF-IDF Vectorization** to understand context. We heavily weight (80%) exact skill matches to suit the recruitment needs of freshers."
+## 4. The Exact Logic Flow (Trace)
 
-Let me know if you need any part explained further!
+Let's trace **Aryan Sharma** (The Perfect Match) vs. **Sneha** (The Mismatch).
+
+### Scenario A: Aryan (Full Stack Dev) applies for MERN Stack Job
+*   **Job Keywords**: `[React, Node.js, Redux]`
+*   **Aryan's Skills**: `[React, Node.js, Redux, MongoDB]`
+*   **Step 1 (Keywords)**: 3/3 matches = **100%**.
+*   **Step 2 (Semantic)**: His summary says "MERN Stack Developer". Job says "MERN Stack". Vector Match = **90%**.
+*   **Final AI Score**: `(100 * 0.8) + (90 * 0.2)` = **98%**.
+*   **Backend Polish**: `98 * 1.2` = **Cap at 100%**.
+*   **Display**: **98% Match** (User sees Green Badge).
+
+### Scenario B: Sneha (Java Dev) applies for MERN Stack Job
+*   **Job Keywords**: `[React, Node.js, Redux]`
+*   **Sneha's Skills**: `[Java, Spring Boot, SQL]`
+*   **Step 1 (Keywords)**: 0/3 matches = **0%**.
+*   **Step 2 (Semantic)**: She talks about "Backend" (which is partly relevant), so maybe **20%**.
+*   **Final AI Score**: `(0 * 0.8) + (20 * 0.2)` = **4%**.
+*   **Backend Polish**: The backend adds her **Academic Score (30%)**.
+*   **Display**: **~30% Match** (User sees Red Badge).
+
+**This proves the system works.** It correctly identifies that Sneha is smart (Academic Score) but *not fit for this specific job* (AI Score).
+
+---
+
+## 5. Summary for the Examiner
+**Q: "What technology stack are you using for AI?"**
+> "We use **Python (Flask)**. For parsing, we use **spaCy** with a custom **EntityRuler** pipeline to identify technical skills. For matching, we use **scikit-learn** to calculate **TF-IDF Vectors** and Cosine Similarity."
+
+**Q: "Why did you choose this logic?"**
+> "We analyzed that for freshers, exact skill matches are more critical than general experience. That's why we weighted Keyword Matching at 80% and Semantic Context at 20%."
