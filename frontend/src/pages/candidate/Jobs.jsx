@@ -73,43 +73,67 @@ const JobDetailsModal = ({ isOpen, onClose, job, onApply, applying, isApplied })
 };
 
 // Job Card Component
-const JobCard = ({ job, pct, applying, onApply, onViewDetails, isApplied }) => (
-    <div className="bg-white rounded-xl border border-gray-200 p-6 flex flex-col hover:shadow-lg hover:border-indigo-300 transition-all duration-300 min-h-[250px]">
-        <div className="flex items-start justify-between gap-4">
-            <div>
-                <p className="text-lg font-bold text-gray-900 line-clamp-1" title={job.title}>{job.title}</p>
-                <div className="flex items-center gap-2 mt-1">
-                    <p className="text-sm font-medium text-indigo-600 line-clamp-1">{job.companyName}</p>
-                    {job.location && <p className="text-sm text-gray-500 flex items-center gap-1 shrink-0"><MapPinIcon className="h-4 w-4" /> <span className="line-clamp-1">{job.location}</span></p>}
+const JobCard = ({ job, pct, missingSkills, applying, onApply, onViewDetails, isApplied }) => {
+    const [showAllSkills, setShowAllSkills] = useState(false);
+    return (
+        <div className="bg-white rounded-xl border border-gray-200 p-6 flex flex-col hover:shadow-lg hover:border-indigo-300 transition-all duration-300 min-h-[250px]">
+            <div className="flex items-start justify-between gap-4">
+                <div>
+                    <p className="text-lg font-bold text-gray-900 line-clamp-1" title={job.title}>{job.title}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                        <p className="text-sm font-medium text-indigo-600 line-clamp-1">{job.companyName}</p>
+                        {job.location && <p className="text-sm text-gray-500 flex items-center gap-1 shrink-0"><MapPinIcon className="h-4 w-4" /> <span className="line-clamp-1">{job.location}</span></p>}
+                    </div>
+                </div>
+                <div className="text-center flex-shrink-0 bg-green-50 px-2 py-1 rounded-lg" title="Based on Skills, Marks, Location & Preferences">
+                    <p className="text-xl font-bold text-green-600">{pct}%</p>
+                    <p className="text-[10px] text-gray-500 font-medium uppercase tracking-wide">Match</p>
                 </div>
             </div>
-            <div className="text-center flex-shrink-0 bg-green-50 px-2 py-1 rounded-lg" title="Based on Skills, Marks, Location & Preferences">
-                <p className="text-xl font-bold text-green-600">{pct}%</p>
-                <p className="text-[10px] text-gray-500 font-medium uppercase tracking-wide">Match</p>
+
+            <p className="text-sm text-gray-600 mt-4 line-clamp-3 leading-relaxed flex-1">
+                {job.description}
+            </p>
+
+            {missingSkills && missingSkills.length > 0 && (
+                <div className="mt-4">
+                    <p className="text-xs font-semibold text-gray-700 mb-2 flex items-center gap-1.5">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-500"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                        Skill Gap vs Job Requirements:
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                        {(showAllSkills ? missingSkills : missingSkills.slice(0, 3)).map((skill, idx) => (
+                            <span key={idx} className="px-2 py-1 bg-red-50 text-red-600 border border-red-100 rounded text-[10px] font-bold uppercase tracking-wider">
+                                {skill}
+                            </span>
+                        ))}
+                        {!showAllSkills && missingSkills.length > 3 && (
+                            <button onClick={() => setShowAllSkills(true)} className="px-2 py-1 bg-gray-50 hover:bg-gray-100 text-gray-600 border border-gray-200 rounded text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-colors">
+                                +{missingSkills.length - 3} more
+                            </button>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            <div className="mt-6 flex items-center justify-between gap-3">
+                <button
+                    className="flex-1 px-4 py-2 rounded-lg text-indigo-600 text-sm font-semibold bg-indigo-50 hover:bg-indigo-100 transition-colors"
+                    onClick={onViewDetails}
+                >
+                    View Details
+                </button>
+                <button
+                    className={`flex-1 px-4 py-2 rounded-lg text-white text-sm font-semibold transition-colors disabled:opacity-70 disabled:cursor-not-allowed shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 ${isApplied ? 'bg-green-600 hover:bg-green-700 focus:ring-green-500' : 'bg-indigo-600 hover:bg-indigo-700 focus:ring-indigo-500'}`}
+                    onClick={onApply}
+                    disabled={applying || isApplied}
+                >
+                    {isApplied ? "Applied" : applying ? "Applying..." : "Apply Now"}
+                </button>
             </div>
         </div>
-
-        <p className="text-sm text-gray-600 mt-4 line-clamp-3 leading-relaxed flex-1">
-            {job.description}
-        </p>
-
-        <div className="mt-6 flex items-center justify-between gap-3">
-            <button
-                className="flex-1 px-4 py-2 rounded-lg text-indigo-600 text-sm font-semibold bg-indigo-50 hover:bg-indigo-100 transition-colors"
-                onClick={onViewDetails}
-            >
-                View Details
-            </button>
-            <button
-                className={`flex-1 px-4 py-2 rounded-lg text-white text-sm font-semibold transition-colors disabled:opacity-70 disabled:cursor-not-allowed shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 ${isApplied ? 'bg-green-600 hover:bg-green-700 focus:ring-green-500' : 'bg-indigo-600 hover:bg-indigo-700 focus:ring-indigo-500'}`}
-                onClick={onApply}
-                disabled={applying || isApplied}
-            >
-                {isApplied ? "Applied" : applying ? "Applying..." : "Apply Now"}
-            </button>
-        </div>
-    </div>
-);
+    );
+};
 
 // Job Card Skeleton
 const JobCardSkeleton = () => (
@@ -334,6 +358,7 @@ export default function Jobs() {
                                         key={job._id}
                                         job={job}
                                         pct={item.matchPercentage ?? 0}
+                                        missingSkills={item.missingSkills || []}
                                         applying={applying === job._id}
                                         onApply={() => !isApplied && handleApplyClick(job)}
                                         onViewDetails={() => handleViewDetails(job)}

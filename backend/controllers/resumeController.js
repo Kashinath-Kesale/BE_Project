@@ -68,12 +68,12 @@ export const uploadResume = async (req, res) => {
       // Create new candidate profile
       candidate = await Candidate.create({
         userId: req.user._id,
-        phone: extractedPhone || "Pending",
+        phone: extractedPhone || "",
         resumeUrl: publicUrl,
         parsedText: parsedText,
         skills: keywords || [],
-        rollNo: "Pending",
-        branch: "Pending",
+        rollNo: "",
+        branch: "",
       });
     }
 

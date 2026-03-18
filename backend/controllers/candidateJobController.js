@@ -18,20 +18,22 @@ export const getJobsWithMatch = async (req, res) => {
     // Calculate match scores in parallel
     const jobsWithMatch = await Promise.all(jobs.map(async (job) => {
       let aiScore = 0;
+      let missingSkills = [];
 
       try {
-        const resumeText = candidate.parsedText || "";
-
+        const resumeText = candidate?.parsedText || "";
 
         // Only call AI service if resume text exists
         if (resumeText) {
           const resp = await axios.post(`${PARSER_URL}/match`, {
             resume_text: resumeText,
+            candidate_skills: candidate?.skills || [],
             job_description: job.description || "",
             job_keywords: job.keywords || []
           }, { timeout: 5000 });
 
           aiScore = resp.data.match_percentage || 0;
+          missingSkills = resp.data.missing_keywords || [];
         }
       } catch (err) {
         // Log critical AI failure
@@ -40,8 +42,8 @@ export const getJobsWithMatch = async (req, res) => {
       }
 
       // Compute final weighted score
-      const match = computeMatchPercentage(candidate, job, aiScore);
-      return { job, matchPercentage: match };
+      const match = computeMatchPercentage(candidate || {}, job, aiScore);
+      return { job, matchPercentage: match, missingSkills };
     }));
 
     // Sort jobs by highest match matchPercentage

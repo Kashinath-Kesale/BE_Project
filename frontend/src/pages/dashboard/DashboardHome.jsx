@@ -74,13 +74,8 @@ const JobsList = ({ jobs, loading }) => {
   );
 };
 
-const SkillGap = ({ candidateKeywords = [], jobKeywords = [] }) => {
-  // Find skills in job keywords that are not in candidate keywords
-  const suggestedSkills = jobKeywords
-    .filter(skill => !candidateKeywords.some(ck => ck.toLowerCase() === skill.toLowerCase()))
-    .slice(0, 4);
-
-  if (suggestedSkills.length === 0) {
+const SkillGap = ({ recommendedSkills = [] }) => {
+  if (!recommendedSkills || recommendedSkills.length === 0) {
     return null;
   }
 
@@ -89,7 +84,7 @@ const SkillGap = ({ candidateKeywords = [], jobKeywords = [] }) => {
       <h3 className="font-bold text-gray-800 text-lg mb-4 flex items-center gap-2"><LightbulbIcon /> Skill Suggestions</h3>
       <p className="text-sm text-gray-600 mb-4">Add these skills to your profile to improve your job matches:</p>
       <div className="flex flex-wrap gap-2">
-        {suggestedSkills.map((skill, idx) => (
+        {recommendedSkills.map((skill, idx) => (
           <span key={idx} className="px-3 py-1 text-sm font-medium rounded-full bg-green-100 text-green-800">{skill}</span>
         ))}
       </div>
@@ -237,9 +232,9 @@ const DashboardHome = () => {
             </div>
 
             {/* Skills (Fixed height at bottom if exists) */}
-            {uniqueJobKeywords.length > 0 && (
+            {profile?.recommendedSkills?.length > 0 && (
               <div className="flex-shrink-0">
-                <SkillGap candidateKeywords={candidateKeywords} jobKeywords={uniqueJobKeywords} />
+                <SkillGap recommendedSkills={profile.recommendedSkills} />
               </div>
             )}
           </div>

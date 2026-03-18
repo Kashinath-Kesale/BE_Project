@@ -106,6 +106,7 @@ export default function Profile() {
     const [saving, setSaving] = useState(false);
     const [completion, setCompletion] = useState(0);
     const [candidate, setCandidate] = useState(null);
+    const [recommendedSkills, setRecommendedSkills] = useState([]);
 
     const [form, setForm] = useState({
         phone: "",
@@ -132,6 +133,7 @@ export default function Profile() {
             const profile = res.data.candidate;
             setCandidate(profile || null);
             setCompletion(res.data.profileCompletion || 0);
+            setRecommendedSkills(res.data.recommendedSkills || []);
 
             if (profile) {
                 setForm({
@@ -328,6 +330,8 @@ export default function Profile() {
                                 </p>
                             )}
                         </div>
+
+
                     </div>
                     {/* RIGHT MAIN CONTENT */}
                     <div className="lg:col-span-8 space-y-8">

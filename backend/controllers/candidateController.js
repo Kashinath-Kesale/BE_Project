@@ -49,6 +49,8 @@ export const updateCandidateProfile = async (req, res) => {
   }
 };
 
+import { suggestSkills } from "../utils/skillSuggester.js";
+
 // Get Candidate Profile
 export const getCandidateProfile = async (req, res) => {
   try {
@@ -71,13 +73,18 @@ export const getCandidateProfile = async (req, res) => {
           parsedText: "",
           keywords: []
         },
-        profileCompletion: 0
+        profileCompletion: 0,
+        recommendedSkills: []
       });
     }
 
     const completion = calculateProfileCompletion(candidate);
 
-    res.json({ candidate, profileCompletion: completion });
+    // Suggest skills based on parsed keywords or manually added skills
+    const currentSkills = candidate.keywords?.length ? candidate.keywords : (candidate.skills || []);
+    const recommendedSkills = suggestSkills(currentSkills, 5);
+
+    res.json({ candidate, profileCompletion: completion, recommendedSkills });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

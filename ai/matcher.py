@@ -29,7 +29,7 @@ class JobMatcher:
             print(f"Error calculating similarity: {e}")
             return 0.0
 
-    def match(self, resume_text, job_description, job_keywords=[]):
+    def match(self, resume_text, job_description, job_keywords=[], candidate_skills=[]):
         """
         Computes a hybrid match score based on:
         1. Semantic Similarity (TF-IDF) - 70%
@@ -43,16 +43,43 @@ class JobMatcher:
         missing_keywords = []
         
         if job_keywords:
-            # Extract skills from resume using our NLP parser
-            # (In production, pass already parsed skills to avoid re-parsing)
-            resume_data = parser.parse(resume_text)
-            resume_skills = set(s.lower() for s in resume_data["skills"])
-            job_skills = set(k.lower() for k in job_keywords)
+            if candidate_skills:
+                raw_resume_skills = candidate_skills
+            else:
+                # Fallback: Extract skills from resume using our NLP parser
+                resume_data = parser.parse(resume_text)
+                raw_resume_skills = resume_data["skills"]
             
-            if job_skills:
-                matching_skills = resume_skills.intersection(job_skills)
-                keyword_score = len(matching_skills) / len(job_skills)
-                missing_keywords = list(job_skills - resume_skills)
+            # Common aliases to map everything to a standard name
+            aliases = {
+                "express": "express.js",
+                "react": "react.js",
+                "node": "node.js",
+                "vue": "vue.js",
+                "next": "next.js",
+                "nest": "nestjs",
+                "mongo": "mongodb",
+                "postgres": "postgresql"
+            }
+            
+            def normalize(skill):
+                s = skill.lower().strip()
+                return aliases.get(s, s)
+                
+            # Map normalized -> original to keep original case for missing keywords display
+            job_skills_map = {normalize(k): k for k in job_keywords}
+            normalized_job_skills = set(job_skills_map.keys())
+            
+            normalized_resume_skills = set(normalize(s) for s in raw_resume_skills)
+            
+            if normalized_job_skills:
+                matching_skills = normalized_resume_skills.intersection(normalized_job_skills)
+                keyword_score = len(matching_skills) / len(normalized_job_skills)
+                
+                # The missing normalized skills
+                missing_normalized = normalized_job_skills - normalized_resume_skills
+                # Map back to what the JD actually asked for
+                missing_keywords = [job_skills_map[mn] for mn in missing_normalized]
         
         # Weighted Average
         # If no keywords provided, rely 100% on semantic score

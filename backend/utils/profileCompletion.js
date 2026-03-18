@@ -6,7 +6,7 @@ export const calculateProfileCompletion = (candidate) => {
   // Personal Info (20%)
   if (candidate.phone) completion += 5;
   if (candidate.gender) completion += 5;
-  if (candidate.rollNo) completion += 5;
+  if (candidate.location) completion += 5;
   if (candidate.branch) completion += 5;
 
   // Academic Details (40%)

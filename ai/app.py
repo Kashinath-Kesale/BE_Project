@@ -104,11 +104,12 @@ def match():
         return jsonify({"error": "Missing resume_text or job_keywords"}), 400
     
     resume_text = data["resume_text"]
+    candidate_skills = data.get("candidate_skills", [])
     job_description = data.get("job_description", "")
     job_keywords = data["job_keywords"]
     
     try:
-        result = matcher.match(resume_text, job_description, job_keywords)
+        result = matcher.match(resume_text, job_description, job_keywords, candidate_skills)
         return jsonify(result)
     except Exception as e:
         import traceback
