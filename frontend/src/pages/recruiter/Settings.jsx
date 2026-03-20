@@ -41,7 +41,7 @@ export default function RecruiterSettings() {
 
     const handleLogout = () => {
         localStorage.clear(); // Clear all auth data
-        toast.error("Logged out successfully");
+        toast.success("Logged out successfully");
         navigate("/login");
     };
 

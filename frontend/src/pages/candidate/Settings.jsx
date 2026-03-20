@@ -43,7 +43,7 @@ export default function Settings() {
     const handleLogout = () => {
         localStorage.removeItem("token");
         localStorage.removeItem("role");
-        toast.error("Logged out successfully");
+        toast.success("Logged out successfully");
         navigate("/login");
     };
 
