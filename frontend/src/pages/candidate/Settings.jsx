@@ -43,7 +43,7 @@ export default function Settings() {
     const handleLogout = () => {
         localStorage.removeItem("token");
         localStorage.removeItem("role");
-        toast.info("Logged out successfully");
+        toast.error("Logged out successfully");
         navigate("/login");
     };
 
@@ -153,7 +153,7 @@ export default function Settings() {
                             <button
                                 type="button"
                                 onClick={handleLogout}
-                                className="w-full sm:w-auto px-6 py-3 rounded-lg font-semibold border border-gray-300 text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                className="w-full sm:w-auto px-6 py-3 rounded-lg font-bold border border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 cursor-pointer"
                             >
                                 Logout
                             </button>

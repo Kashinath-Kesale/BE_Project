@@ -32,7 +32,7 @@ const Navbar = ({ toggleSidebar, role }) => {
 
   const onLogout = () => {
     localStorage.clear();
-    toast.info("Logged out successfully");
+    toast.error("Logged out successfully");
     navigate("/login");
   };
 
