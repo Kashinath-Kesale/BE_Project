@@ -32,6 +32,16 @@ const seedBulk = async () => {
         const seededUserIds = seededUsers.map(u => u._id);
 
         if (seededUserIds.length > 0) {
+            const jobsToDelete = await Job.find({ createdBy: { $in: seededUserIds } });
+            const jobIds = jobsToDelete.map(j => j._id);
+            
+            // Delete associated applications first to prevent orphaned records in Analytics
+            await import("../models/Application.js").then(async ({ default: Application }) => {
+                await Application.deleteMany({
+                    $or: [{ candidateId: { $in: seededUserIds } }, { jobId: { $in: jobIds } }]
+                });
+            });
+
             await Job.deleteMany({ createdBy: { $in: seededUserIds } });
             await Candidate.deleteMany({ userId: { $in: seededUserIds } });
             await Recruiter.deleteMany({ userId: { $in: seededUserIds } });
