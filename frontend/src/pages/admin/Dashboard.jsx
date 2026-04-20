@@ -335,7 +335,6 @@ const AdminDashboard = () => {
                                             <option value="All">All Statuses</option>
                                             <option value="Applied">Applied</option>
                                             <option value="Shortlisted">Shortlisted</option>
-                                            <option value="Hired">Hired</option>
                                             <option value="Rejected">Rejected</option>
                                         </select>
                                     </div>
@@ -381,7 +380,6 @@ const AdminDashboard = () => {
                                                             <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wide
                                                                 ${app.status === 'applied' ? 'bg-blue-100 text-blue-800' : ''}
                                                                 ${app.status === 'shortlisted' ? 'bg-yellow-100 text-yellow-800' : ''}
-                                                                ${app.status === 'hired' ? 'bg-green-100 text-green-800' : ''}
                                                                 ${app.status === 'rejected' ? 'bg-red-100 text-red-800' : ''}
                                                             `}>
                                                                 {app.status}

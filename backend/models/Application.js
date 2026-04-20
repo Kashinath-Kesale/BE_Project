@@ -7,7 +7,7 @@ const applicationSchema = new mongoose.Schema(
     resumeUrl: { type: String }, // optional (in case you want to allow uploading resume)
     status: { 
       type: String, 
-      enum: ["applied", "shortlisted", "rejected", "hired"], 
+      enum: ["applied", "shortlisted", "rejected"], 
       default: "applied" 
     }
   },

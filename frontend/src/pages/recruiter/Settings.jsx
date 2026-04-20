@@ -40,7 +40,7 @@ export default function RecruiterSettings() {
     };
 
     const handleLogout = () => {
-        localStorage.clear(); // Clear all auth data
+        localStorage.clear();
         toast.success("Logged out successfully");
         navigate("/login");
     };

@@ -21,7 +21,6 @@ const StatusBadge = ({ status }) => {
     applied: { cls: "bg-yellow-100 text-yellow-800", icon: <User size={14} /> },
     shortlisted: { cls: "bg-blue-100 text-blue-800", icon: <Star size={14} /> },
     rejected: { cls: "bg-red-100 text-red-800", icon: <X size={14} /> },
-    hired: { cls: "bg-green-100 text-green-800", icon: <Check size={14} /> },
   };
 
   const cfg = map[status] || { cls: "bg-gray-100 text-gray-800" };
@@ -118,7 +117,6 @@ export default function Applicants() {
           <option value="applied">Applied</option>
           <option value="shortlisted">Shortlisted</option>
           <option value="rejected">Rejected</option>
-          <option value="hired">Hired</option>
         </select>
         <div className="ml-auto text-sm text-gray-500">
           Total: {filteredApplications.length}
@@ -220,12 +218,6 @@ export default function Applicants() {
                                 >
                                   <X size={16} className="mr-2" /> Reject
                                 </button>
-                                <button
-                                  onClick={() => handleStatusChange(app._id, "hired")}
-                                  className="flex items-center w-full px-4 py-3 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700 transition"
-                                >
-                                  <Check size={16} className="mr-2" /> Hire
-                                </button>
                               </div>
                             </div>
                           )}
@@ -281,7 +273,7 @@ export default function Applicants() {
                   </div>
 
                   {/* Mobile Actions */}
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-2 gap-2">
                     <button
                       onClick={() => handleStatusChange(app._id, "shortlisted")}
                       className={`flex flex-col items-center justify-center p-2 rounded-lg border text-xs font-medium transition ${app.status === 'shortlisted' ? 'bg-blue-100 border-blue-200 text-blue-700' : 'bg-white border-gray-200 text-gray-700'}`}
@@ -293,12 +285,6 @@ export default function Applicants() {
                       className={`flex flex-col items-center justify-center p-2 rounded-lg border text-xs font-medium transition ${app.status === 'rejected' ? 'bg-red-100 border-red-200 text-red-700' : 'bg-white border-gray-200 text-gray-700'}`}
                     >
                       <X size={16} className="mb-1" /> Reject
-                    </button>
-                    <button
-                      onClick={() => handleStatusChange(app._id, "hired")}
-                      className={`flex flex-col items-center justify-center p-2 rounded-lg border text-xs font-medium transition ${app.status === 'hired' ? 'bg-green-100 border-green-200 text-green-700' : 'bg-white border-gray-200 text-gray-700'}`}
-                    >
-                      <Check size={16} className="mb-1" /> Hire
                     </button>
                   </div>
                 </div>

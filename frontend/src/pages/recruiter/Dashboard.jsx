@@ -55,7 +55,7 @@ const ApplicantRow = ({ name, jobTitle, status }) => {
 export default function Dashboard() {
   const navigate = useNavigate();
   const [recruiter, setRecruiter] = useState(null);
-  const [stats, setStats] = useState({ activeJobs: 0, totalApplicants: 0, shortlisted: 0, hired: 0 });
+  const [stats, setStats] = useState({ activeJobs: 0, totalApplicants: 0, shortlisted: 0 });
   const [recentApplicants, setRecentApplicants] = useState([]);
   const [loading, setLoading] = useState(true);
   const [needsProfile, setNeedsProfile] = useState(false);
@@ -162,7 +162,7 @@ export default function Dashboard() {
       )}
 
       {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         <StatCard
           icon={<Briefcase size={28} className="text-white" />}
           title="Active Jobs"
@@ -180,12 +180,6 @@ export default function Dashboard() {
           title="Shortlisted"
           value={stats.shortlisted}
           color="bg-amber-500"
-        />
-        <StatCard
-          icon={<CheckCircle size={28} className="text-white" />}
-          title="Hired"
-          value={stats.hired}
-          color="bg-emerald-500"
         />
       </div>
 

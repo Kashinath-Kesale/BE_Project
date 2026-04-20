@@ -84,9 +84,8 @@ export const getRecruiterStats = async (req, res) => {
 
     const totalApplicants = applications.length;
     const shortlisted = applications.filter(a => a.status === 'shortlisted').length;
-    const hired = applications.filter(a => a.status === 'hired').length;
 
-    res.json({ activeJobs, totalApplicants, shortlisted, hired });
+    res.json({ activeJobs, totalApplicants, shortlisted });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
