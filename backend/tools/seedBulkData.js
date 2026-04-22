@@ -4,6 +4,7 @@ import User from "../models/User.js";
 import Job from "../models/Job.js";
 import Recruiter from "../models/Recruiter.js";
 import Candidate from "../models/Candidate.js";
+import Application from "../models/Application.js";
 import connectDB from "../config/db.js";
 import bcrypt from "bcryptjs";
 
@@ -13,279 +14,221 @@ connectDB();
 const hashPassword = async (password) => {
     const salt = await bcrypt.genSalt(10);
     return await bcrypt.hash(password, salt);
-};``
+};
 
 const seedBulk = async () => {
     try {
-        console.log("🌱 Starting Bulk Seeding with Realistic Indian Data...");
+        console.log("🌱 Starting Massive Conference Data Seed...");
 
-        // Define Seeded Emails for targeted cleanup
-        const recruiterEmails = ["hr@techsolutions.in", "hr@finstream.in", "hr@cloudsystems.in"];
-        const candidateEmails = ["aryan@test.com", "sneha@test.com", "rohan@test.com", "priya@test.com"];
-        const allSeededEmails = [...recruiterEmails, ...candidateEmails];
-
-        // 0. Clean (Wipe) ONLY Seeded Data
-        console.log("🧹 Cleaning existing seeded data...");
-
-        // Find users to get their IDs
-        const seededUsers = await User.find({ email: { $in: allSeededEmails } });
+        console.log("🧹 Cleaning existing demo data...");
+        const seededUsers = await User.find({ email: { $regex: /\.demo\.com$/i } });
         const seededUserIds = seededUsers.map(u => u._id);
 
         if (seededUserIds.length > 0) {
             const jobsToDelete = await Job.find({ createdBy: { $in: seededUserIds } });
             const jobIds = jobsToDelete.map(j => j._id);
             
-            // Delete associated applications first to prevent orphaned records in Analytics
-            await import("../models/Application.js").then(async ({ default: Application }) => {
-                await Application.deleteMany({
-                    $or: [{ candidateId: { $in: seededUserIds } }, { jobId: { $in: jobIds } }]
-                });
+            await Application.deleteMany({
+                $or: [{ candidateId: { $in: seededUserIds } }, { jobId: { $in: jobIds } }]
             });
 
             await Job.deleteMany({ createdBy: { $in: seededUserIds } });
             await Candidate.deleteMany({ userId: { $in: seededUserIds } });
             await Recruiter.deleteMany({ userId: { $in: seededUserIds } });
             await User.deleteMany({ _id: { $in: seededUserIds } });
-            console.log(`✅ Removed ${seededUserIds.length} existing seeded users and their data.`);
-        } else {
-            console.log("ℹ️ No existing seeded data found to clean.");
+            console.log(`✅ Removed ${seededUserIds.length} existing demo users and their data.`);
         }
 
-        // 1. Create Recruiters (Indian Tech Companies)
-        const recruiters = [
-            { name: "Rahul Verma", email: recruiterEmails[0], company: "TechSolutions India", location: "Pune" },
-            { name: "Neha Deshmukh", email: recruiterEmails[1], company: "FinStream Analytics", location: "Mumbai" },
-            { name: "Vikram Singh", email: recruiterEmails[2], company: "CloudSystems Pvt Ltd", location: "Bangalore" }
+        const recruitersData = [
+            { name: "Rahul Verma", email: "rahul@techstart.demo.com", company: "TechStart", location: "Pune" },
+            { name: "Neha Deshmukh", email: "neha@finanalytics.demo.com", company: "FinAnalytics", location: "Bangalore" },
+            { name: "Vikram Singh", email: "vikram@cloudsys.demo.com", company: "CloudSys", location: "Mumbai" },
+            { name: "Aditi Sharma", email: "aditi@logicworks.demo.com", company: "LogicWorks", location: "Pune" },
+            { name: "Siddharth Rao", email: "siddharth@nexacore.demo.com", company: "NexaCore Analytics", location: "Chennai" },
+            { name: "Pooja Patil", email: "pooja@cyberguard.demo.com", company: "CyberGuard Solutions", location: "Bangalore" },
+            { name: "Arvind Gupta", email: "arvind@dataflow.demo.com", company: "DataFlow Systems", location: "Mumbai" },
+            { name: "Meera Nair", email: "meera@applabs.demo.com", company: "AppLabs", location: "Noida" },
+            { name: "Karan Johar", email: "karan@blockforge.demo.com", company: "BlockForge", location: "Pune" },
+            { name: "Snehal Kadam", email: "snehal@cartnova.demo.com", company: "CartNova", location: "Bangalore" },
+            { name: "Amitabh Raj", email: "amitabh@robotech.demo.com", company: "RoboTech Dynamics", location: "Pune" },
+            { name: "Kavita Reddy", email: "kavita@siliconchips.demo.com", company: "SiliconChips Pvt Ltd", location: "Bangalore" },
         ];
 
         let createdRecruiters = [];
+        const defaultPassword = await hashPassword("password123");
 
-        for (const data of recruiters) {
-            let user = await User.findOne({ email: data.email });
-            if (!user) {
-                const hashedPassword = await hashPassword("password123");
-                user = await User.create({ name: data.name, email: data.email, password: hashedPassword, role: "recruiter", isVerified: true });
-            }
-            let rec = await Recruiter.findOne({ userId: user._id });
-            if (!rec) {
-                rec = await Recruiter.create({
-                    userId: user._id,
-                    companyName: data.company,
-                    location: data.location,
-                    status: "approved"
-                });
-            }
+        for (const data of recruitersData) {
+            let user = await User.create({ name: data.name, email: data.email, password: defaultPassword, role: "recruiter", isVerified: true });
+            let rec = await Recruiter.create({
+                userId: user._id, companyName: data.company, location: data.location, status: "approved"
+            });
             createdRecruiters.push({ rec, user });
         }
-        console.log(`✅ Created/Found ${createdRecruiters.length} Recruiters`);
 
-        // 2. Create Jobs (Targeted for Specific Roles)
-        const jobsData = [
-            // Job 1: Full Stack SDE (Matches Aryan - MERN)
-            {
-                title: "Full Stack Developer (MERN)", recruiterIndex: 0,
-                desc: `## Job Description
-TechSolutions India is looking for a skilled Full Stack Developer to build scalable web applications. The ideal candidate should be proficient in the MERN stack.
-
-## Key Responsibilities
-- Develop user-facing features using React.js and Redux.
-- Build robust backend APIs with Node.js, Express, and MongoDB.
-- Ensure high performance and responsiveness of applications.
-- Collaborate with cross-functional teams to design and ship new features.
-
-## Requirements
-- Strong proficiency in JavaScript (ES6+), React.js, and Node.js.
-- Experience with RESTful APIs and MongoDB.
-- Knowledge of state management (Redux/Context API).
-- Familiarity with version control (Git).`,
-                keywords: ["React", "Node.js", "MongoDB", "Express", "JavaScript", "Redux"],
-                location: "Pune",
-                criteria: { minTenthPercent: 80, minTwelfthPercent: 80, minCgpa: 8.0, gender: "Any", eligibleBranches: ["CS", "IT"] }
-            },
-
-            // Job 2: Java Backend Developer (Matches Sneha - Java)
-            {
-                title: "Backend Developer (Java)", recruiterIndex: 2,
-                desc: `## Role Overview
-CloudSystems Pvt Ltd is hiring Backend Developers to work on enterprise-grade distributed systems. You will handle core logic and database interactions.
+        // Job Descriptions Helper
+        const buildJD = (title, tech) => `## Overview
+We are looking for a dedicated ${title} to join our team.
 
 ## Responsibilities
-- Design and develop microservices using Java and Spring Boot.
-- Optimize SQL queries and database schemas (MySQL/PostgreSQL).
-- Implement secure authentication and authorization protocols.
-- Debug and resolve production issues in a timely manner.
+- Architect, build, and maintain scalable applications.
+- Collaborate with engineering and product teams to define technical solutions.
+- Enhance efficiency, performance, and reliability.
 
 ## Qualifications
-- Strong grasp of Core Java, Multithreading, and OOP concepts.
-- Hands-on experience with Spring Boot and Hibernate.
-- Proficiency in SQL and RDBMS (MySQL).
-- Knowledge of Microservices architecture is a plus.`,
-                keywords: ["Java", "Spring Boot", "SQL", "MySQL", "Microservices", "Hibernate"],
-                location: "Bangalore",
-                criteria: { minTenthPercent: 70, minTwelfthPercent: 70, minCgpa: 7.5, gender: "Any", eligibleBranches: ["CS", "IT", "ENTC"] }
-            },
+- Bachelor's degree in Engineering or Computer Science.
+- Mandatory hands-on expertise in the following: ${tech}.
+- Willingness to operate in an agile environment and ship clean code.`;
 
-            // Job 3: Data Scientist / ML Engineer (Matches Rohan - AI/ML)
-            {
-                title: "Data Scientist / AI Engineer", recruiterIndex: 1,
-                desc: `## About the Role
-FinStream Analytics is seeking a Data Scientist to build predictive models and analyze large financial datasets.
-
-## Key Duties
-- Develop and deploy Machine Learning models using Python.
-- Analyze complex datasets to derive actionable insights.
-- Work with libraries like TensorFlow, PyTorch, and Scikit-learn.
-- Visualize data trends using Matplotlib or Tableau.
-
-## Requirements
-- Proficiency in Python and ML libraries (Pandas, NumPy, Scikit-learn).
-- Experience with Deep Learning frameworks (TensorFlow/PyTorch).
-- Strong mathematical foundations (Statistics, Probability, Algebra).
-- Ability to communicate findings clearly.`,
-                keywords: ["Python", "Machine Learning", "TensorFlow", "Data Science", "Pandas", "Scikit-learn"],
-                location: "Mumbai",
-                criteria: { minTenthPercent: 75, minTwelfthPercent: 75, minCgpa: 8.0, gender: "Any", eligibleBranches: ["CS", "IT", "A&R"] }
-            },
-
-            // Job 4: Business Analyst / Generalist (Matches Priya - Mixed)
-            {
-                title: "Business Analyst / Consultant", recruiterIndex: 1,
-                desc: `## Job Summary
-We are looking for a versatile Business Analyst who understands both technology and business processes.
-
-## Responsibilities
-- Bridge the gap between IT and business teams.
-- Document requirements and create functional specifications.
-- Perform basic data analysis using Excel and SQL.
-- Create presentations and reports for stakeholders.
-
-## Skills Needed
-- Basic understanding of programming (Python/Java) is a plus.
-- Advanced proficiency in Excel and SQL.
-- Excellent communication and presentation skills.`,
-                keywords: ["Excel", "SQL", "Communication", "Management", "Analysis"],
-                location: "Mumbai",
-                criteria: { minTenthPercent: 60, minTwelfthPercent: 60, minCgpa: 6.5, gender: "Any", eligibleBranches: ["CS", "IT", "ME", "ENTC"] }
-            }
+        const jobsList = [
+            { title: "React Frontend Engineer", rIdx: 0, keywords: ["React", "JavaScript", "Redux", "Tailwind", "CSS", "Frontend"], loc: "Pune", criteria: { minCgpa: 7.0, eligibleBranches: ["CS", "IT"] } },
+            { title: "Node.js Backend Developer", rIdx: 1, keywords: ["Node.js", "Express", "MongoDB", "Backend", "API", "Microservices"], loc: "Bangalore", criteria: { minCgpa: 6.5, eligibleBranches: ["CS", "IT"] } },
+            { title: "Full Stack SDE (MERN)", rIdx: 2, keywords: ["React", "Node.js", "MongoDB", "Express", "Full Stack", "JavaScript"], loc: "Mumbai", criteria: { minCgpa: 7.5, eligibleBranches: ["CS", "IT"] } },
+            { title: "Python Data Scientist", rIdx: 3, keywords: ["Python", "Pandas", "Machine Learning", "Data Science", "Scikit", "NumPy"], loc: "Pune", criteria: { minCgpa: 8.0, eligibleBranches: ["CS", "IT"] } },
+            { title: "AI/ML Engineer", rIdx: 4, keywords: ["Python", "TensorFlow", "Deep Learning", "AI", "NLP", "PyTorch"], loc: "Chennai", criteria: { minCgpa: 8.5, eligibleBranches: ["CS", "IT"] } },
+            { title: "Java Spring Boot Developer", rIdx: 5, keywords: ["Java", "Spring Boot", "SQL", "Hibernate", "Microservices"], loc: "Bangalore", criteria: { minCgpa: 7.0, eligibleBranches: ["CS", "IT", "ECE"] } },
+            { title: "Cloud Devops Engineer", rIdx: 6, keywords: ["AWS", "Docker", "Kubernetes", "DevOps", "CI/CD", "Linux"], loc: "Mumbai", criteria: { minCgpa: 6.0, eligibleBranches: ["CS", "IT"] } },
+            { title: "Cybersecurity Analyst", rIdx: 7, keywords: ["Security", "Networking", "Penetration Testing", "Linux", "Ethical Hacking"], loc: "Noida", criteria: { minCgpa: 6.5, eligibleBranches: ["CS", "IT"] } },
+            { title: "Android App Developer", rIdx: 8, keywords: ["Android", "Kotlin", "Mobile App", "Java", "Firebase"], loc: "Pune", criteria: { minCgpa: 7.0, eligibleBranches: ["CS", "IT"] } },
+            { title: "Blockchain Developer", rIdx: 9, keywords: ["Blockchain", "Solidity", "Web3", "Ethereum", "Crypto"], loc: "Bangalore", criteria: { minCgpa: 8.0, eligibleBranches: ["CS", "IT"] } },
+            { title: "QA Automation Engineer", rIdx: 0, keywords: ["Testing", "Selenium", "Cypress", "QA", "Java", "Python"], loc: "Pune", criteria: { minCgpa: 6.5, eligibleBranches: ["CS", "IT"] } },
+            { title: "Go-lang Backend Developer", rIdx: 1, keywords: ["Golang", "Backend", "Microservices", "Docker"], loc: "Bangalore", criteria: { minCgpa: 7.5, eligibleBranches: ["CS", "IT"] } },
+            { title: "Database Administrator (DBA)", rIdx: 2, keywords: ["SQL", "MySQL", "PostgreSQL", "Database", "Performance"], loc: "Mumbai", criteria: { minCgpa: 6.0, eligibleBranches: ["CS", "IT"] } },
+            { title: "Frontend Vue.js Developer", rIdx: 3, keywords: ["Vue.js", "JavaScript", "Frontend", "CSS"], loc: "Pune", criteria: { minCgpa: 6.5, eligibleBranches: ["CS", "IT"] } },
+            { title: "Software Engineer - C++", rIdx: 4, keywords: ["C++", "Algorithms", "Data Structures", "Linux"], loc: "Chennai", criteria: { minCgpa: 8.0, eligibleBranches: ["CS", "IT", "ECE"] } },
+            { title: "Business Analyst (IT)", rIdx: 5, keywords: ["SQL", "Agile", "Excel", "Communication", "Management"], loc: "Bangalore", criteria: { minCgpa: 6.0, eligibleBranches: ["CS", "IT", "ECE", "MECH"] } },
+            { title: "Embedded Systems Engineer", rIdx: 11, keywords: ["C", "Microcontrollers", "Embedded", "IoT", "ARM"], loc: "Bangalore", criteria: { minCgpa: 7.0, eligibleBranches: ["ECE", "EE", "Robotics"] } },
+            { title: "VLSI Design Engineer", rIdx: 11, keywords: ["VLSI", "Verilog", "VHDL", "FPGA", "Hardware"], loc: "Bangalore", criteria: { minCgpa: 8.0, eligibleBranches: ["ECE"] } },
+            { title: "Robotics Control Engineer", rIdx: 10, keywords: ["ROS", "Robotics", "C++", "Control Systems", "Automation", "Python"], loc: "Pune", criteria: { minCgpa: 7.5, eligibleBranches: ["Robotics", "MECH", "ECE"] } },
+            { title: "Mechatronics Systems Lead", rIdx: 10, keywords: ["Mechatronics", "PLC", "AutoCAD", "Sensors", "Arduino"], loc: "Pune", criteria: { minCgpa: 7.0, eligibleBranches: ["Robotics", "MECH"] } }
         ];
 
-        for (const j of jobsData) {
-            const recruiterObj = createdRecruiters[j.recruiterIndex];
-            const existingJob = await Job.findOne({
+        let createdJobs = [];
+        for (const j of jobsList) {
+            const rObj = createdRecruiters[j.rIdx];
+            const job = await Job.create({
                 title: j.title,
-                companyName: recruiterObj.rec.companyName
+                description: buildJD(j.title, j.keywords.join(", ")),
+                companyName: rObj.rec.companyName,
+                recruiterId: rObj.rec._id,
+                keywords: j.keywords,
+                location: j.loc,
+                criteria: { minTenthPercent: 50, minTwelfthPercent: 50, minCgpa: j.criteria.minCgpa, gender: "Any", eligibleBranches: j.criteria.eligibleBranches },
+                createdBy: rObj.user._id,
+                minExperience: "Fresher"
             });
-
-            if (!existingJob) {
-                await Job.create({
-                    title: j.title,
-                    description: j.desc,
-                    companyName: recruiterObj.rec.companyName,
-                    recruiterId: recruiterObj.rec._id,
-                    keywords: j.keywords,
-                    location: j.location,
-                    criteria: j.criteria,
-                    createdBy: recruiterObj.user._id,
-                    minExperience: "0-2 Years"
-                });
-            }
+            createdJobs.push(job);
         }
-        console.log(`✅ Processed ${jobsData.length} Jobs`);
 
-        // 3. Create Candidates (Specific Profiles)
-        const candidatesData = [
-            // 1. Aryan Sharma: The "Full Stack" Guy (Matches Job 1)
-            {
-                name: "Aryan Sharma", email: candidateEmails[0],
-                skills: ["React", "Node.js", "MongoDB", "Express", "JavaScript", "Redux", "Git"],
-                keyword_str: "React, Node.js, Express, MongoDB, JavaScript, Redux, Web Development, API Design",
-                marks: { tenth: 92, twelfth: 89, cgpa: 9.2, btechYear: 2025 },
-                loc: "Pune", branch: "CS", gender: "Male",
-                summary: "Passionate Full Stack Developer with 2 years of freelance experience. Built multiple MERN stack applications including E-commerce platforms and Chat apps. Strong problem solver with a knack for clean UI/UX."
-            },
-
-            // 2. Sneha Patil: The "Java Backend" Specialist (Matches Job 2)
-            {
-                name: "Sneha Patil", email: candidateEmails[1],
-                skills: ["Java", "Spring Boot", "SQL", "MySQL", "Hibernate", "Microservices"],
-                keyword_str: "Java, Spring Boot, Hibernate, SQL, Database Management, Backend Development",
-                marks: { tenth: 85, twelfth: 82, cgpa: 8.5, btechYear: 2025 },
-                loc: "Bangalore", branch: "IT", gender: "Female",
-                summary: "Backend Developer specializing in Java and Spring Boot. Experience in designing RESTful APIs and managing relational databases. Focused on building secure and scalable backend systems."
-            },
-
-            // 3. Rohan Gupta: The "AI/ML" Enthusiast (Matches Job 3)
-            {
-                name: "Rohan Gupta", email: candidateEmails[2],
-                skills: ["Python", "TensorFlow", "Machine Learning", "Deep Learning", "Pandas", "Computer Vision"],
-                keyword_str: "Python, Machine Learning, Data Science, TensorFlow, Neural Networks, Computer Vision",
-                marks: { tenth: 88, twelfth: 90, cgpa: 9.0, btechYear: 2025 },
-                loc: "Mumbai", branch: "CS", gender: "Male",
-                summary: "AI/ML Researcher and Data Science enthusiast. Completed internships in Predictive Analytics. Proficient in Python, TensorFlow, and building deep learning models for real-world problems."
-            },
-
-            // 4. Priya Singh: The "Generalist" (Matches Job 4, partial match others)
-            {
-                name: "Priya Singh", email: candidateEmails[3],
-                skills: ["Python", "Java", "Excel", "SQL", "Public Speaking", "Management"],
-                keyword_str: "Python, Java, Data Analysis, Excel, SQL, Project Management, Communication",
-                marks: { tenth: 78, twelfth: 75, cgpa: 7.8, btechYear: 2025 },
-                loc: "Mumbai", branch: "ENTC", gender: "Female",
-                summary: "Versatile engineering graduate with a diverse skillset in coding and management. Strong analytical skills utilizing Excel and SQL. Excellent communicator looking for roles in Analysis or Consultancy."
-            }
+        const students = [
+            { name: "Aarav Patel", branch: "CS", skills: ["React", "JavaScript", "HTML", "CSS", "Tailwind"], type: "Frontend" },
+            { name: "Vihaan Sharma", branch: "IT", skills: ["Node.js", "Express", "MongoDB", "REST API"], type: "Backend" },
+            { name: "Arjun Kesale", branch: "CS", skills: ["React", "Node.js", "MongoDB", "Express", "Full Stack"], type: "MERN" },
+            { name: "Sai Krishna", branch: "CS", skills: ["Python", "Pandas", "Scikit", "SQL"], type: "Data" },
+            { name: "Aditya Singh", branch: "IT", skills: ["Python", "TensorFlow", "Deep Learning", "NLP"], type: "AI" },
+            { name: "Kabir Das", branch: "CS", skills: ["Java", "Spring Boot", "SQL", "Hibernate"], type: "Java" },
+            { name: "Ishaan Iyer", branch: "CS", skills: ["AWS", "Docker", "Linux", "Kubernetes", "DevOps"], type: "Cloud" },
+            { name: "Vivaan Joshi", branch: "IT", skills: ["Python", "Linux", "Networking", "Security", "Ethical Hacking"], type: "Sec" },
+            { name: "Ananya Desai", branch: "CS", skills: ["Kotlin", "Android", "Java", "Firebase"], type: "App" },
+            { name: "Diya Reddy", branch: "IT", skills: ["Solidity", "Blockchain", "Ethereum", "Crypto"], type: "Blockchain" },
+            { name: "Riya Mehta", branch: "CS", skills: ["Selenium", "Testing", "Java", "Cypress"], type: "QA" },
+            { name: "Isha Gupta", branch: "IT", skills: ["Golang", "Backend", "Docker", "REST API"], type: "Go" },
+            { name: "Prisha Nair", branch: "CS", skills: ["SQL", "MySQL", "PostgreSQL", "Database"], type: "DBA" },
+            { name: "Avni Bhat", branch: "IT", skills: ["Vue.js", "JavaScript", "CSS", "Frontend"], type: "Vue" },
+            { name: "Kavya Menon", branch: "CS", skills: ["C++", "Data Structures", "Algorithms", "Linux"], type: "CPP" },
+            { name: "Meher Kaur", branch: "IT", skills: ["Excel", "Communication", "Agile", "SQL"], type: "BA" },
+            { name: "Rahul Tendulkar", branch: "CS", skills: ["React", "Next.js", "JavaScript", "Redux"], type: "Frontend" },
+            { name: "Sneha Rao", branch: "IT", skills: ["Java", "Microservices", "Spring Boot", "SQL"], type: "Java" },
+            { name: "Amit Kumar", branch: "CS", skills: ["Python", "Machine Learning", "Data Analysis", "Scikit"], type: "Data" },
+            { name: "Kunal Sen", branch: "IT", skills: ["React", "Firebase", "CSS", "Frontend"], type: "Frontend" },
+            { name: "Shruti Das", branch: "CS", skills: ["Node.js", "API", "Docker", "AWS", "Backend"], type: "Backend" },
+            { name: "Tanya Kapoor", branch: "CS", skills: ["Java", "C++", "SQL", "HTML"], type: "General" },
+            { name: "Raju Prasad", branch: "ECE", skills: ["C", "Microcontrollers", "Embedded", "IoT", "ARM"], type: "Embedded" },
+            { name: "Simran Chatterjee", branch: "ECE", skills: ["Verilog", "VHDL", "VLSI", "Hardware"], type: "VLSI" },
+            { name: "Vivek Roy", branch: "Robotics", skills: ["ROS", "C++", "Automation", "Robotics"], type: "Robotics" }
         ];
 
-        for (const c of candidatesData) {
-            let user = await User.findOne({ email: c.email });
-            if (!user) {
-                const hashedPassword = await hashPassword("password123");
-                user = await User.create({ name: c.name, email: c.email, password: hashedPassword, role: "candidate", isVerified: true });
-            }
+        let createdCandidates = [];
+        for (let i = 0; i < students.length; i++) {
+            const s = students[i];
+            const firstName = s.name.split(" ")[0].toLowerCase();
+            const email = `${firstName}${i+1}@student.demo.com`;
+            let user = await User.create({ name: s.name, email: email, password: defaultPassword, role: "candidate", isVerified: true });
+            
+            const summaryStr = s.skills.join(", ");
+            // Enhanced parsed text for AI Model TF-IDF accuracy
+            const richParsedText = `
+${s.name}
+${email} | +91-9${Math.floor(Math.random()*1000000000)} | Pune, India
 
-            const existingCand = await Candidate.findOne({ userId: user._id });
-            if (!existingCand) {
-                // Generate a rich parsed resume text for the AI matcher
-                const richParsedText = `
-                    ${c.name}
-                    ${c.email} | +91-9876543210 | ${c.loc}, India
-                    
-                    PROFILE SUMMARY
-                    ${c.summary}
-                    
-                    TECHNICAL SKILLS
-                    ${c.keyword_str}
-                    
-                    EDUCATION
-                    B.Tech in ${c.branch}, 2021-2025, CGPA: ${c.marks.cgpa}
-                    Higher Secondary (12th), ${c.marks.twelfth}%
-                    
-                    PROJECTS
-                    1. Portfolio Website: Built using ${c.skills[0]} and ${c.skills[1]}.
-                    2. Data Analysis Tool: Analyzed datasets using ${c.skills[2] || "Python"}.
-                `;
+PROFESSIONAL SUMMARY
+Highly motivated engineer with a strong foundation in ${s.type} technologies. Quick learner with excellent problem-solving skills and a passion for engineering. Capable of communicating complex ideas effectively and working cross-functionally. 
 
-                await Candidate.create({
-                    userId: user._id,
-                    phone: "+91-9876543210",
-                    rollNo: "UNIV" + Math.floor(Math.random() * 10000),
-                    branch: c.branch,
-                    location: c.loc,
-                    education: {
-                        tenth: { percentage: c.marks.tenth, year: 2019 },
-                        twelfth: { percentage: c.marks.twelfth, year: 2021 },
-                        btech: { percentage: 0, year: c.marks.btechYear, cgpa: c.marks.cgpa.toString() }
-                    },
-                    parsedText: richParsedText,
-                    skills: c.skills,
-                    keywords: c.skills,
-                    gender: c.gender
-                });
+TECHNICAL EXPERTISE
+Core Skills: ${summaryStr}
+Additional: Git, GitHub, VS Code, Agile Methodologies, Problem Solving, Communication.
+
+ACADEMIC HISTORY
+B.Tech in ${s.branch} Engineering, State University (Graduating 2025)
+Cumulative Grade Point Average: ${7 + Math.random() * 2}/10.0
+
+KEY PROJECTS
+1. Capstone Project: Architected and deployed an end-to-end solution utilizing ${s.skills[0]} and ${s.skills[1] || 'industry-standard tools'}. 
+2. Real-time Analysis Module: Built a high-performance system minimizing latency by 30% using ${s.skills[2] || 'optimized algorithms'}.
+            `;
+
+            let cand = await Candidate.create({
+                userId: user._id,
+                phone: `+91-9${Math.floor(Math.random()*1000000000)}`,
+                rollNo: "UNI" + (1000 + i),
+                branch: s.branch,
+                location: ["Pune", "Mumbai", "Bangalore"][i % 3],
+                education: {
+                    tenth: { percentage: 80, year: 2019 },
+                    twelfth: { percentage: 80, year: 2021 },
+                    btech: { percentage: 0, year: 2025, cgpa: (7.5 + Math.random() * 2).toFixed(1) }
+                },
+                parsedText: richParsedText,
+                skills: s.skills,
+                keywords: s.skills,
+                gender: i%2===0 ? "Male" : "Female"
+            });
+            createdCandidates.push({ cand, user });
+        }
+
+        console.log("🚀 Simulating Candidates applying to Jobs...");
+        let totalApps = 0;
+        
+        for (const c of createdCandidates) {         
+            const shuffledJobs = [...createdJobs].sort(() => 0.5 - Math.random());
+            const appliedJobs = shuffledJobs.slice(0, 4);
+
+            for(const job of appliedJobs) {
+                 const rand = Math.random();
+                 let appStatus = "applied";
+                 if(rand > 0.8) appStatus = "shortlisted";
+                 else if (rand < 0.2) appStatus = "rejected"; // Added "rejected" status so charts look varied
+
+                 await Application.create({
+                     jobId: job._id,
+                     candidateId: c.user._id,
+                     status: appStatus
+                 });
+                 totalApps++;
             }
         }
-        console.log(`✅ Created/Found ${candidatesData.length} Candidates`);
+        console.log(`✅ Automatically generated ${totalApps} Applications with simulated AI Matches!`);
 
-        console.log("\n🎉 Bulk Seeding With Realistic Data Complete!");
+        console.log("\n🔑 TEST CREDENTIALS - All passwords are 'password123'");
+        console.log("\nRecruiters:");
+        recruitersData.forEach(r => console.log(`- ${r.company}: ${r.email}`));
+        console.log("\nCandidates:");
+        students.slice(0, 5).forEach((s, i) => {
+            const firstName = s.name.split(" ")[0].toLowerCase();
+            console.log(`- ${s.name} (${s.type}): ${firstName}${i+1}@student.demo.com`);
+        });
+        console.log(`... and ${students.length - 5} more students.`);
 
+        console.log("\n🎉 Conference Bulk Seeding Complete!");
         process.exit();
     } catch (err) {
         console.error(err);
